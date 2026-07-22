@@ -470,7 +470,7 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                       }
                     }}
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
-                    <RefreshCw size={15} /> Reset &amp; Retry Booking
+                    <RefreshCw size={15} /> Reset to Invoiced
                   </button>
                 </section>
               )}
