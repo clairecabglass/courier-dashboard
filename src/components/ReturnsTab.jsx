@@ -117,6 +117,11 @@ export default function ReturnsTab({ orders, onRefresh }) {
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                 {[order.address?.city, order.address?.province].filter(Boolean).join(', ')}
               </p>
+              {order.returnInitiatedAt && (
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                  Return initiated: {new Date(order.returnInitiatedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}
+                </p>
+              )}
             </div>
             <div className="text-right shrink-0">
               {order.waybillNo && (

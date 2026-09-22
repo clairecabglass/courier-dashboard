@@ -420,6 +420,39 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                 </section>
               )}
 
+              {/* Return info */}
+              {order.isReturn && (order.returnInitiatedAt || order.returnCondition || order.conditionCheckedAt) && (
+                <section>
+                  <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Return</h3>
+                  <div className="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4 space-y-2">
+                    {order.returnInitiatedAt && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500 dark:text-slate-400">Initiated</span>
+                        <span className="text-slate-700 dark:text-slate-300">{new Date(order.returnInitiatedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                      </div>
+                    )}
+                    {order.returnCondition && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500 dark:text-slate-400">Condition</span>
+                        <span className="text-slate-700 dark:text-slate-300">{order.returnCondition}</span>
+                      </div>
+                    )}
+                    {order.returnNote && (
+                      <div className="flex justify-between text-xs gap-4">
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0">Note</span>
+                        <span className="text-slate-700 dark:text-slate-300 text-right">{order.returnNote}</span>
+                      </div>
+                    )}
+                    {order.conditionCheckedAt && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500 dark:text-slate-400">Condition recorded</span>
+                        <span className="text-slate-700 dark:text-slate-300">{new Date(order.conditionCheckedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
               {/* Waybill */}
               {(order.waybillNo || order.waybillLink || order.epxLabels) && (
                 <section>
