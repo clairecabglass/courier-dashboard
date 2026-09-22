@@ -39,6 +39,18 @@ const RULES = [
     title: 'Manual courier (Triangle)',
     detail: () => 'Flagged for Triangle — no automatic quote or booking. This one must be handled manually.',
   },
+  {
+    type: 'return-in-transit',
+    severity: 'info',
+    match: (o) => o.isReturn && o.status === STATUS.BOOKED,
+    title: (o) => `Return in transit — ${o.linkedPs || o.psNo}`,
+    detail: (o) => {
+      const parts = [`Return shipment ${o.psNo} is on its way back.`]
+      if (o.returnInitiatedAt) parts.push(`Initiated ${new Date(o.returnInitiatedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}.`)
+      if (o.customer?.company) parts.push(`Customer: ${o.customer.company}.`)
+      return parts.join(' ')
+    },
+  },
 ]
 
 function buildNotifications(orders) {
@@ -51,7 +63,7 @@ function buildNotifications(orders) {
           orderId: o.id,
           psNo: o.psNo,
           severity: rule.severity,
-          title: rule.title,
+          title: typeof rule.title === 'function' ? rule.title(o) : rule.title,
           detail: rule.detail(o),
           timestamp: o.dateReceived,
         })
