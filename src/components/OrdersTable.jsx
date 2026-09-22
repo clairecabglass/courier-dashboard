@@ -27,7 +27,7 @@ const COURIER_COLORS = {
   Other:    'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800',
 }
 
-export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, onMoveToHistory, onBulkDelete, onCreateReturn, inHistory = false }) {
+export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, onMoveToHistory, onBulkDelete, inHistory = false }) {
   const { perm } = useAuth()
   const canEdit = perm('orders', 'edit')
   // terminal = can't edit fields (booked / mid-booking / failed)
@@ -260,15 +260,7 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
                   </td>
 
                   <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center gap-2">
-                      {inHistory && onCreateReturn && !order.isReturn && !order.linkedPs && (
-                        <button
-                          onClick={() => onCreateReturn(order)}
-                          className="px-2 py-1 rounded-lg text-xs font-medium bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors whitespace-nowrap"
-                        >Returns</button>
-                      )}
-                      <ChevronRight size={16} className={`transition-colors ${selected ? 'text-brand' : 'text-slate-300 dark:text-slate-600'}`} />
-                    </div>
+                    <ChevronRight size={16} className={`transition-colors ${selected ? 'text-brand' : 'text-slate-300 dark:text-slate-600'}`} />
                   </td>
                 </tr>
               )

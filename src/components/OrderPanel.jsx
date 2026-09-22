@@ -31,7 +31,7 @@ function Field({ label, value, editing, onChange, placeholder, type = 'text' }) 
   )
 }
 
-export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveNote, onMoveToHistory, onRestore, onToggleBackOrder, inHistory }) {
+export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveNote, onMoveToHistory, onRestore, onToggleBackOrder, onCreateReturn, inHistory }) {
   const { user, perm } = useAuth()
   const canEdit = perm('orders', 'edit')
   const open = !!order
@@ -548,6 +548,18 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                     )}
                   </div>
                 </section>
+              )}
+
+              {/* Create Return — only in history, not already a return */}
+              {inHistory && onCreateReturn && !order.isReturn && !order.linkedPs && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
+                  <button
+                    onClick={() => onCreateReturn(order)}
+                    className="w-full text-left text-xs text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400 px-1 py-1 transition-colors"
+                  >
+                    Create return for this order…
+                  </button>
+                </div>
               )}
 
               {/* Subtle booking timestamp */}

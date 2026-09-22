@@ -417,8 +417,7 @@ function Dashboard() {
                 <OrdersTable orders={filtered} selectedId={selectedId}
                   onSelect={(id) => setSelectedId(prev => prev === id ? null : id)}
                   onUpdate={updateOrder} inHistory={activeTab === 'history'}
-                  onMoveToHistory={moveToHistory} onBulkDelete={bulkDelete}
-                  onCreateReturn={perm('returns', 'edit') ? (order) => setReturnOrder(order) : null} />
+                  onMoveToHistory={moveToHistory} onBulkDelete={bulkDelete} />
               </>
             )}
           </>
@@ -432,6 +431,7 @@ function Dashboard() {
         onMoveToHistory={() => selectedOrder && moveToHistory([selectedOrder.id])}
         onRestore={() => selectedOrder && restoreFromHistory(selectedOrder.id)}
         onToggleBackOrder={() => selectedOrder && toggleBackOrder(selectedOrder.id)}
+        onCreateReturn={perm('returns', 'edit') ? (order) => setReturnOrder(order) : null}
         inHistory={selectedInHistory} />
 
       {returnOrder && (

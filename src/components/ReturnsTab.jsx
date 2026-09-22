@@ -48,15 +48,13 @@ function ConditionModal({ order, onClose, onConfirm }) {
           ))}
         </div>
 
-        {condition === 'Other' && (
-          <textarea
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-3 text-sm resize-none mb-4 focus:outline-none focus:ring-2 focus:ring-amber-400"
-            rows={3}
-            placeholder="Describe the condition..."
-            value={note}
-            onChange={e => { setNote(e.target.value); setErr('') }}
-          />
-        )}
+        <textarea
+          className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-3 text-sm resize-none mb-4 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          rows={3}
+          placeholder={condition === 'Other' ? 'Describe the condition (required)…' : 'Optional note about the return…'}
+          value={note}
+          onChange={e => { setNote(e.target.value); setErr('') }}
+        />
 
         {err && <p className="text-sm text-red-500 mb-3">{err}</p>}
 
