@@ -187,6 +187,7 @@ export default function StagedTab({ orders, stagedIds, onTogglePicked, onSaveNot
   // Staged = all Pending orders EXCEPT booked / mid-booking / failed
   const staged = useMemo(
     () => (orders ?? []).filter(o =>
+      !o.isReturn &&
       o.status !== STATUS.BOOKED && o.status !== STATUS.BOOKING && o.status !== STATUS.BOOKING_FAILED
     ),
     [orders]

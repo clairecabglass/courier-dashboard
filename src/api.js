@@ -60,7 +60,9 @@ export const setBackOrder     = (psNo, backOrder)    => post('setBackOrder', { p
 export const updateOrder      = (psNo, changes)      => post('updateOrder', { psNo, changes })
 export const deleteOrder      = (psNo)               => post('deleteOrder', { psNo })
 export const markDispatched   = (psNo, dispatched)   => post('markDispatched', { psNo, dispatched })
-export const uploadPickingSlip = (fileName, fileData) => post('uploadPickingSlip', { fileName, fileData })
+export const uploadPickingSlip        = (fileName, fileData) => post('uploadPickingSlip', { fileName, fileData })
+export const apiCreateReturn          = (psNo, items)        => post('createReturn', { psNo, items })
+export const apiUpdateReturnCondition = (psNo, condition, note) => post('updateReturnCondition', { psNo, condition, note: note || '' })
 
 // WH Uploads
 export async function fetchWHData() {

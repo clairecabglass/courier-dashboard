@@ -5,6 +5,8 @@ import { ActivityProvider, useActivity } from './context/ActivityContext'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useNotifications } from './hooks/useNotifications'
 import { LIVE, fetchOrders, fetchWHData, updateOrder as apiUpdate, deleteOrder as apiDelete, archiveBooked, archiveOrders as apiArchiveOrders, restoreOrders, saveNote as apiSaveNote, setPacked as apiSetPacked, setStaged as apiSetStaged, setBackOrder as apiSetBackOrder } from './api'
+import ReturnsTab from './components/ReturnsTab'
+import ReturnModal from './components/ReturnModal'
 import { Archive } from 'lucide-react'
 import { playPing } from './ping'
 import Toasts from './components/Toasts'
@@ -43,6 +45,7 @@ function Dashboard() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+  const [returnOrder, setReturnOrder] = useState(null)
   const [toasts, setToasts] = useState([])
   const [whData, setWHData] = useState({ categories: [], uploads: [] })
 
@@ -392,6 +395,7 @@ function Dashboard() {
                 onUndoDispatch={undoDispatch} />
             )}
             {activeTab === 'admin'    && <AdminPage orders={orders} history={history} />}
+            {activeTab === 'returns'  && <ReturnsTab orders={orders} onRefresh={loadOrders} />}
 
             {(activeTab === 'orders' || activeTab === 'history') && (
               <>
@@ -413,7 +417,8 @@ function Dashboard() {
                 <OrdersTable orders={filtered} selectedId={selectedId}
                   onSelect={(id) => setSelectedId(prev => prev === id ? null : id)}
                   onUpdate={updateOrder} inHistory={activeTab === 'history'}
-                  onMoveToHistory={moveToHistory} onBulkDelete={bulkDelete} />
+                  onMoveToHistory={moveToHistory} onBulkDelete={bulkDelete}
+                  onCreateReturn={perm('returns', 'edit') ? (order) => setReturnOrder(order) : null} />
               </>
             )}
           </>
@@ -428,6 +433,14 @@ function Dashboard() {
         onRestore={() => selectedOrder && restoreFromHistory(selectedOrder.id)}
         onToggleBackOrder={() => selectedOrder && toggleBackOrder(selectedOrder.id)}
         inHistory={selectedInHistory} />
+
+      {returnOrder && (
+        <ReturnModal
+          order={returnOrder}
+          onClose={() => setReturnOrder(null)}
+          onCreated={(rtnPs) => { notify(`Return ${rtnPs} created`); loadOrders() }}
+        />
+      )}
 
       <Toasts toasts={toasts} remove={removeToast} />
     </div>

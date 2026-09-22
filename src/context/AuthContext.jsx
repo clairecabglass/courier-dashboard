@@ -20,6 +20,7 @@ export const PAGES = [
   { key: 'dispatch', label: 'Dispatch',         hasEdit: true,  editHint: 'Label & mark dispatched' },
   { key: 'wh',       label: 'WH Uploads',       hasEdit: true,  editHint: 'Manage categories & settings' },
   { key: 'pricing',  label: 'Pricing',          hasEdit: true,  editHint: 'Edit markup tiers' },
+  { key: 'returns',  label: 'Returns',           hasEdit: true,  editHint: 'Record return condition and confirm receipt' },
   { key: 'admin',    label: 'Admin',            hasEdit: false },
 ]
 
@@ -37,15 +38,15 @@ const P = (view, edit) => ({ view, edit })
 export function defaultPermsForRole(role) {
   switch (role) {
     case 'admin':
-      return { orders: P(1,1), upload: P(1,1), staged: P(1,1), dispatch: P(1,1), wh: P(1,1), pricing: P(1,1), admin: P(1,1) }
+      return { orders: P(1,1), upload: P(1,1), staged: P(1,1), dispatch: P(1,1), wh: P(1,1), pricing: P(1,1), returns: P(1,1), admin: P(1,1) }
     case 'general':
-      return { orders: P(1,1), upload: P(1,1), staged: P(1,1), dispatch: P(1,1), wh: P(1,1), pricing: P(1,1), admin: P(0,0) }
+      return { orders: P(1,1), upload: P(1,1), staged: P(1,1), dispatch: P(1,1), wh: P(1,1), pricing: P(1,1), returns: P(0,0), admin: P(0,0) }
     case 'sales':
-      return { orders: P(1,0), upload: P(1,0), staged: P(1,0), dispatch: P(1,0), wh: P(1,0), pricing: P(1,0), admin: P(0,0) }
+      return { orders: P(1,0), upload: P(1,0), staged: P(1,0), dispatch: P(1,0), wh: P(1,0), pricing: P(1,0), returns: P(0,0), admin: P(0,0) }
     case 'dispatch':
-      return { orders: P(0,0), upload: P(0,0), staged: P(1,1), dispatch: P(1,1), wh: P(0,0), pricing: P(0,0), admin: P(0,0) }
+      return { orders: P(0,0), upload: P(0,0), staged: P(1,1), dispatch: P(1,1), wh: P(0,0), pricing: P(0,0), returns: P(0,0), admin: P(0,0) }
     default:
-      return { orders: P(1,0), upload: P(0,0), staged: P(1,0), dispatch: P(0,0), wh: P(0,0), pricing: P(0,0), admin: P(0,0) }
+      return { orders: P(1,0), upload: P(0,0), staged: P(1,0), dispatch: P(0,0), wh: P(0,0), pricing: P(0,0), returns: P(0,0), admin: P(0,0) }
   }
 }
 

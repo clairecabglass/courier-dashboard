@@ -27,7 +27,7 @@ const COURIER_COLORS = {
   Other:    'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800',
 }
 
-export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, onMoveToHistory, onBulkDelete, inHistory = false }) {
+export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, onMoveToHistory, onBulkDelete, onCreateReturn, inHistory = false }) {
   const { perm } = useAuth()
   const canEdit = perm('orders', 'edit')
   // terminal = can't edit fields (booked / mid-booking / failed)
@@ -143,12 +143,20 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
                   )}
 
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <a href={order.psUrl} target="_blank" rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
-                      className="font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                      {order.psNo} <ExternalLink size={11} />
-                    </a>
+                    <div className="flex items-center gap-1.5">
+                      {order.isReturn && (
+                        <span className="text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-1.5 py-0.5 rounded-full">RTN</span>
+                      )}
+                      <a href={order.psUrl} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                        {order.psNo} <ExternalLink size={11} />
+                      </a>
+                    </div>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{fmtDate(order.dateReceived)}</p>
+                    {order.linkedPs && (
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">{order.isReturn ? '← ' : '↩ '}{order.linkedPs}</p>
+                    )}
                   </td>
 
                   <td className="px-4 py-3">
@@ -182,18 +190,23 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
                         {order.selectedCourier || '—'}
                       </span>
                     ) : (
-                      <select value={order.selectedCourier}
-                        onChange={e => onUpdate(order.id, { selectedCourier: e.target.value })}
-                        disabled={terminal}
-                        className={`text-xs font-medium border rounded-lg px-2 py-1 focus:outline-none transition-colors dark:bg-slate-700
-                          ${order.selectedCourier ? COURIER_COLORS[order.selectedCourier] || 'bg-white border-slate-200 text-slate-700' : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400'}
-                          ${terminal ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                        <option value="">Select…</option>
-                        <option value="TCG">TCG</option>
-                        <option value="EPX">EPX</option>
-                        <option value="Triangle">Triangle</option>
-                        <option value="Other">Other</option>
-                      </select>
+                      <div className="relative inline-block">
+                        <select value={order.selectedCourier}
+                          onChange={e => onUpdate(order.id, { selectedCourier: e.target.value })}
+                          disabled={terminal}
+                          className={`appearance-none text-xs font-medium border rounded-lg pl-2 pr-6 py-1 focus:outline-none transition-colors
+                            ${order.selectedCourier ? COURIER_COLORS[order.selectedCourier] || 'bg-white border-slate-200 text-slate-700 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300' : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-400'}
+                            ${terminal ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                          <option value="">Select…</option>
+                          <option value="TCG">TCG</option>
+                          <option value="EPX">EPX</option>
+                          <option value="Triangle">Triangle</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 opacity-50">
+                          <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
+                        </span>
+                      </div>
                     )}
                   </td>
 
@@ -246,8 +259,16 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
                     )}
                   </td>
 
-                  <td className="px-3 py-3">
-                    <ChevronRight size={16} className={`transition-colors ${selected ? 'text-brand' : 'text-slate-300 dark:text-slate-600'}`} />
+                  <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center gap-2">
+                      {inHistory && onCreateReturn && !order.isReturn && !order.linkedPs && (
+                        <button
+                          onClick={() => onCreateReturn(order)}
+                          className="px-2 py-1 rounded-lg text-xs font-medium bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors whitespace-nowrap"
+                        >Returns</button>
+                      )}
+                      <ChevronRight size={16} className={`transition-colors ${selected ? 'text-brand' : 'text-slate-300 dark:text-slate-600'}`} />
+                    </div>
                   </td>
                 </tr>
               )

@@ -249,6 +249,7 @@ export default function DispatchTab({ orders, history, packedIds, onTogglePacked
   // Booked orders awaiting dispatch — must have a waybill (or be Triangle)
   const booked = useMemo(
     () => (orders ?? []).filter(o =>
+      !o.isReturn &&
       o.status === STATUS.BOOKED &&
       (o.waybillNo || (o.selectedCourier || '').toLowerCase() === 'triangle')
     ),
