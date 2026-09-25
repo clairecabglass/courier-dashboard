@@ -5,6 +5,7 @@ export default function ReturnModal({ order, onClose, onCreated }) {
   const [selected, setSelected] = useState(
     () => new Set(order.items.map((_, i) => i))
   )
+  const [buyerArranges, setBuyerArranges] = useState(false)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
 
@@ -23,7 +24,7 @@ export default function ReturnModal({ order, onClose, onCreated }) {
     setSaving(true)
     setErr('')
     try {
-      const res = await apiCreateReturn(order.psNo, selectedItems)
+      const res = await apiCreateReturn(order.psNo, selectedItems, buyerArranges)
       onCreated(res.rtnPs)
       onClose()
     } catch (e) {
@@ -43,6 +44,16 @@ export default function ReturnModal({ order, onClose, onCreated }) {
           <p><span className="font-medium">Collecting from:</span> {order.customer?.company} — {[order.address?.street, order.address?.city].filter(Boolean).join(', ')}</p>
           <p><span className="font-medium">Delivering to:</span> CabGlass — 19 Saffier Crescent, Tamsui Industria, George, 6529</p>
         </div>
+
+        {/* Shipment arrangement */}
+        <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-600 mb-4 cursor-pointer hover:border-slate-300 dark:hover:border-slate-500 transition-colors">
+          <input type="checkbox" className="accent-slate-800 dark:accent-slate-300 w-4 h-4 shrink-0 mt-0.5"
+            checked={buyerArranges} onChange={e => setBuyerArranges(e.target.checked)} />
+          <div>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Buyer arranges shipment</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Tick if the customer is organising their own courier back to us. No quote or booking will be generated.</p>
+          </div>
+        </label>
 
         <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Select items to return</p>
 

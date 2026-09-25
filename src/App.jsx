@@ -7,6 +7,7 @@ import { useNotifications } from './hooks/useNotifications'
 import { LIVE, fetchOrders, fetchWHData, updateOrder as apiUpdate, deleteOrder as apiDelete, archiveBooked, archiveOrders as apiArchiveOrders, restoreOrders, saveNote as apiSaveNote, setPacked as apiSetPacked, setStaged as apiSetStaged, setBackOrder as apiSetBackOrder } from './api'
 import ReturnsTab from './components/ReturnsTab'
 import ReturnModal from './components/ReturnModal'
+import RebinPage from './components/RebinPage'
 import { Archive } from 'lucide-react'
 import { playPing } from './ping'
 import Toasts from './components/Toasts'
@@ -384,6 +385,7 @@ function Dashboard() {
           <>
             {activeTab === 'upload'   && <UploadTab onUploaded={loadOrders} />}
             {activeTab === 'wh'       && <WHUploadsPage whData={whData} onRefresh={loadWHData} />}
+            {activeTab === 'rebin'    && <RebinPage />}
             {activeTab === 'pricing'  && <GlassPricingPage />}
             {activeTab === 'userguide' && <UserGuidePage />}
             {activeTab === 'staged' && (

@@ -37,7 +37,7 @@ export default function Header({ activeTab, setActiveTab, onRefresh, refreshing,
   const isDispatchRole = user?.role === 'dispatch'
 
   const ordersActive = activeTab === 'orders' || activeTab === 'upload' || activeTab === 'history' || activeTab === 'returns'
-  const warehouseActive = activeTab === 'staged' || activeTab === 'dispatch' || activeTab === 'wh'
+  const warehouseActive = activeTab === 'staged' || activeTab === 'dispatch' || activeTab === 'wh' || activeTab === 'rebin'
   const generalActive = activeTab === 'pricing' || activeTab === 'userguide'
 
   // Items that live under the Warehouse dropdown (non-dispatch roles)
@@ -45,6 +45,7 @@ export default function Header({ activeTab, setActiveTab, onRefresh, refreshing,
     { key: 'staged',   label: 'Staged',     show: perm('staged', 'view') },
     { key: 'dispatch', label: 'Dispatch',   show: perm('dispatch', 'view') },
     { key: 'wh',       label: 'WH Uploads', show: perm('wh', 'view') },
+    { key: 'rebin',    label: 'Rebin',      show: perm('rebin', 'view') },
   ].filter(t => t.show)
 
   // Items under the General dropdown

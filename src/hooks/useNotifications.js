@@ -40,16 +40,31 @@ const RULES = [
     detail: () => 'Flagged for Triangle — no automatic quote or booking. This one must be handled manually.',
   },
   {
+    type: 'return-pending-finance',
+    severity: 'warning',
+    match: (o) => o.isReturn && o.status === 'Pending Finance Approval',
+    title: (o) => `Return needs approval — ${o.linkedPs || o.psNo}`,
+    detail: (o) => `Return ${o.psNo} is waiting for Finance approval.${o.customer?.company ? ` Customer: ${o.customer.company}.` : ''}`,
+  },
+  {
     type: 'return-in-transit',
     severity: 'info',
-    match: (o) => o.isReturn && o.status === STATUS.BOOKED,
+    match: (o) => o.isReturn && (o.status === 'Booked' || o.status === 'Awaiting Return'),
     title: (o) => `Return in transit — ${o.linkedPs || o.psNo}`,
     detail: (o) => {
-      const parts = [`Return shipment ${o.psNo} is on its way back.`]
+      const parts = [`Return ${o.psNo} is on its way back.`]
+      if (o.buyerArranges) parts.push('Buyer is arranging shipment.')
       if (o.returnInitiatedAt) parts.push(`Initiated ${new Date(o.returnInitiatedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}.`)
       if (o.customer?.company) parts.push(`Customer: ${o.customer.company}.`)
       return parts.join(' ')
     },
+  },
+  {
+    type: 'return-condition-checked',
+    severity: 'info',
+    match: (o) => o.isReturn && o.status === 'Condition Checked',
+    title: (o) => `Return condition recorded — ${o.linkedPs || o.psNo}`,
+    detail: (o) => `${o.psNo}: ${o.returnCondition || 'condition checked'}${o.returnNote ? ` — ${o.returnNote}` : ''}. Ready to move to History.`,
   },
 ]
 

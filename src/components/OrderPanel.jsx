@@ -421,10 +421,22 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
               )}
 
               {/* Return info */}
-              {order.isReturn && (order.returnInitiatedAt || order.returnCondition || order.conditionCheckedAt) && (
+              {(order.isReturn || order.linkedPs) && (
                 <section>
                   <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Return</h3>
                   <div className="bg-slate-50 dark:bg-slate-700/30 rounded-xl p-4 space-y-2">
+                    {order.linkedPs && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500 dark:text-slate-400">{order.isReturn ? 'Original order' : 'Return'}</span>
+                        <span className="font-mono text-brand font-semibold">{order.linkedPs}</span>
+                      </div>
+                    )}
+                    {order.isReturn && order.buyerArranges && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500 dark:text-slate-400">Shipment</span>
+                        <span className="text-slate-700 dark:text-slate-300">Buyer arranges</span>
+                      </div>
+                    )}
                     {order.returnInitiatedAt && (
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500 dark:text-slate-400">Initiated</span>
@@ -447,6 +459,12 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500 dark:text-slate-400">Condition recorded</span>
                         <span className="text-slate-700 dark:text-slate-300">{new Date(order.conditionCheckedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                      </div>
+                    )}
+                    {order.creditNo && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500 dark:text-slate-400">Credit Note</span>
+                        <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{order.creditNo}</span>
                       </div>
                     )}
                   </div>

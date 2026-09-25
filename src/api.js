@@ -61,8 +61,11 @@ export const updateOrder      = (psNo, changes)      => post('updateOrder', { ps
 export const deleteOrder      = (psNo)               => post('deleteOrder', { psNo })
 export const markDispatched   = (psNo, dispatched)   => post('markDispatched', { psNo, dispatched })
 export const uploadPickingSlip        = (fileName, fileData) => post('uploadPickingSlip', { fileName, fileData })
-export const apiCreateReturn          = (psNo, items)        => post('createReturn', { psNo, items })
+export const apiCreateReturn          = (psNo, items, buyerArranges = false) => post('createReturn', { psNo, items, buyerArranges })
 export const apiUpdateReturnCondition = (psNo, condition, note) => post('updateReturnCondition', { psNo, condition, note: note || '' })
+export const apiApproveReturn         = (psNo)               => post('approveReturn', { psNo })
+export const apiUpdateCreditNo        = (psNo, creditNo)     => post('updateCreditNo', { psNo, creditNo })
+export const apiCompleteReturn        = (psNo)               => post('completeReturn', { psNo })
 
 // WH Uploads
 export async function fetchWHData() {

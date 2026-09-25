@@ -7,6 +7,9 @@ export const STATUS = {
   BOOKING_FAILED: 'Booking Failed',
   ERROR: 'Error',
   TRIANGLE: 'Manual - Triangle',
+  PENDING_FINANCE_APPROVAL: 'Pending Finance Approval',
+  AWAITING_RETURN: 'Awaiting Return',
+  CONDITION_CHECKED: 'Condition Checked',
 }
 
 let _nextId = 1
