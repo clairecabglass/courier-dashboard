@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ExternalLink } from 'lucide-react'
 import { STATUS } from '../mockData'
 import { apiUpdateReturnCondition, apiApproveReturn, apiUpdateCreditNo, apiCompleteReturn } from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -124,7 +125,13 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
         >
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-xs font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">RTN</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{order.psNo}</span>
+            {order.psUrl
+              ? <a href={order.psUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline text-sm flex items-center gap-1">
+                  {order.psNo} <ExternalLink size={11} />
+                </a>
+              : <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{order.psNo}</span>
+            }
             {order.linkedPs && (
               <span className="text-xs text-slate-400 dark:text-slate-500">← {order.linkedPs}</span>
             )}
@@ -133,6 +140,13 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
               <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">Buyer arranges</span>
             )}
           </div>
+          {order.invoiceUrl && (
+            <a href={order.invoiceUrl.startsWith('http') ? order.invoiceUrl : `https://${order.invoiceUrl}`}
+              target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-xs text-blue-500 dark:text-blue-400 hover:underline mb-1">
+              <ExternalLink size={10} /> Invoice {order.invoiceNo || ''}
+            </a>
+          )}
           <p className="text-sm text-slate-600 dark:text-slate-300 truncate">{order.customer?.company}</p>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
             {[order.address?.city, order.address?.province].filter(Boolean).join(', ')}
