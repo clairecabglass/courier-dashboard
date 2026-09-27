@@ -131,7 +131,9 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
                   className={`cursor-pointer transition-colors border-l-2
                     ${selected
                       ? 'border-brand bg-brand/5 dark:bg-brand/10'
-                      : 'border-transparent hover:bg-slate-50/80 dark:hover:bg-slate-700/40'}`}>
+                      : order.isReturn
+                        ? 'border-orange-400 bg-orange-50/40 dark:bg-orange-900/10 hover:bg-orange-50 dark:hover:bg-orange-900/20'
+                        : 'border-transparent hover:bg-slate-50/80 dark:hover:bg-slate-700/40'}`}>
 
                   {canEdit && (
                     <td className="px-3 py-3" onClick={e => e.stopPropagation()}>

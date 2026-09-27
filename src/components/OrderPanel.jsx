@@ -602,7 +602,7 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
               )}
 
               {/* Create Return — only in history, not already a return */}
-              {inHistory && onCreateReturn && !order.isReturn && !order.linkedPs && (
+              {inHistory && onCreateReturn && !order.isReturn && !order.linkedPs && order.status === STATUS.BOOKED && (
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-2">
                   <button
                     onClick={() => onCreateReturn(order)}
