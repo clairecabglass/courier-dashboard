@@ -4,6 +4,7 @@ import { AuthProvider, useAuth, landingTab } from './context/AuthContext'
 import { ActivityProvider, useActivity } from './context/ActivityContext'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useNotifications } from './hooks/useNotifications'
+import { useTestOrders } from './hooks/useTestOrders'
 import { LIVE, fetchOrders, fetchWHData, updateOrder as apiUpdate, deleteOrder as apiDelete, archiveBooked, archiveOrders as apiArchiveOrders, restoreOrders, saveNote as apiSaveNote, setPacked as apiSetPacked, setStaged as apiSetStaged, setBackOrder as apiSetBackOrder } from './api'
 import ReturnsTab from './components/ReturnsTab'
 import ReturnModal from './components/ReturnModal'
@@ -29,6 +30,8 @@ import StagedTab from './components/StagedTab'
 function Dashboard() {
   const { user, can, perm } = useAuth()
   const { addLog } = useActivity()
+  const isClaire = user?.name === 'Claire'
+  const test = useTestOrders(isClaire)
   const [dark, toggleDark] = useDarkMode()
   const [archiving, setArchiving] = useState(false)
   const cachedData = LIVE ? (() => { try { const c = localStorage.getItem('cabglass_orders_cache'); return c ? JSON.parse(c) : null } catch (_) { return null } })() : null
@@ -126,7 +129,11 @@ function Dashboard() {
     return () => clearInterval(t)
   }, [])
 
-  const source = activeTab === 'history' ? history : orders
+  // Merge test orders (Claire-only, localStorage) into the displayed lists
+  const allOrders  = isClaire ? [...test.testOrders,  ...orders]  : orders
+  const allHistory = isClaire ? [...test.testHistory, ...history] : history
+
+  const source = activeTab === 'history' ? allHistory : allOrders
 
   const filtered = useMemo(() => {
     const rows = source.filter(o => {
@@ -158,10 +165,11 @@ function Dashboard() {
     return rows.sort((a, b) => rank(a) - rank(b) || newestFirst(a, b))
   }, [source, activeFilter, courierFilter, search, dateFrom, dateTo, activeTab])
 
-  const selectedOrder = [...orders, ...history].find(o => o.id === selectedId) || null
-  const selectedInHistory = !!history.find(o => o.id === selectedId)
+  const selectedOrder = [...allOrders, ...allHistory].find(o => o.id === selectedId) || null
+  const selectedInHistory = !!allHistory.find(o => o.id === selectedId)
 
   const updateOrder = (id, changes) => {
+    if (test.isTestId(id)) { test.updateTestOrder(id, changes); return }
     const prev = [...orders, ...history].find(o => o.id === id)
     if (prev) {
       const psNo = `PS ${prev.psNo}`
@@ -194,6 +202,8 @@ function Dashboard() {
 
   // Move specific booked orders to History (bulk or single)
   const moveToHistory = async (ids) => {
+    const testIds = ids.filter(id => test.isTestId(id))
+    if (testIds.length) { testIds.forEach(id => test.archiveTestOrder(id)); setSelectedId(null); notify('Test order moved to History'); return }
     if (!LIVE) { notify('Archiving works on the live site only.', 'warning'); return }
     // Manual move allows any status except mid-booking
     const targets = [...orders].filter(o => ids.includes(o.id) && o.status !== STATUS.BOOKING)
@@ -216,6 +226,7 @@ function Dashboard() {
 
   // Save a note (everyone can do this)
   const saveOrderNote = (id, note) => {
+    if (test.isTestId(id)) { test.saveTestNote(id, note); notify('Note saved'); return }
     const order = [...orders, ...history].find(o => o.id === id)
     if (!order) return
     setOrders(prev => prev.map(o => o.id === id ? { ...o, note } : o))
@@ -226,6 +237,7 @@ function Dashboard() {
   }
 
   const deleteOrder = (id) => {
+    if (test.isTestId(id)) { test.deleteTestOrder(id); setSelectedId(null); notify('Test order deleted'); return }
     const order = [...orders, ...history].find(o => o.id === id)
     if (order) addLog(user, 'Deleted order', `PS ${order.psNo}`)
     setOrders(prev => prev.filter(o => o.id !== id))
@@ -290,6 +302,7 @@ function Dashboard() {
 
   // Restore an order from History back to Orders (by id)
   const restoreFromHistory = async (id) => {
+    if (test.isTestId(id)) { test.restoreTestOrder(id); setSelectedId(null); notify('Test order restored'); return }
     const order = history.find(o => o.id === id)
     if (!order) return
     if (!LIVE) { notify('Restore works on the live site only.', 'warning'); return }
@@ -401,9 +414,16 @@ function Dashboard() {
 
             {(activeTab === 'orders' || activeTab === 'history') && (
               <>
-                {activeTab === 'orders' && <StatsBar orders={orders} />}
+                {activeTab === 'orders' && <StatsBar orders={allOrders.filter(o => !o.isTest)} />}
                 {activeTab === 'orders' && perm('orders', 'edit') && (
-                  <div className="flex justify-end mb-3">
+                  <div className="flex justify-end items-center gap-2 mb-3">
+                    {isClaire && (
+                      <button onClick={test.createTestOrder}
+                        title="Create a fake order for testing — only you can see this"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 shadow-sm hover:border-violet-400 transition-colors">
+                        🧪 New test order
+                      </button>
+                    )}
                     <button onClick={handleArchive} disabled={archiving}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-colors disabled:opacity-50">
                       <Archive size={14} className={archiving ? 'animate-pulse' : ''} />
