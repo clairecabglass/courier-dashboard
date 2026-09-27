@@ -397,7 +397,7 @@ function Dashboard() {
                 onUndoDispatch={undoDispatch} />
             )}
             {activeTab === 'admin'    && <AdminPage orders={orders} history={history} />}
-            {activeTab === 'returns'  && <ReturnsTab orders={orders} onRefresh={loadOrders} />}
+            {activeTab === 'returns'  && <ReturnsTab orders={orders} onRefresh={loadOrders} selectedId={selectedId} onSelect={(id) => setSelectedId(prev => prev === id ? null : id)} />}
 
             {(activeTab === 'orders' || activeTab === 'history') && (
               <>

@@ -84,7 +84,7 @@ function ConditionModal({ order, onClose, onConfirm }) {
   )
 }
 
-function ReturnCard({ order, canEdit, canFinance, onCondition, onApprove, onComplete, onRefresh }) {
+function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onCondition, onApprove, onComplete, onRefresh }) {
   const [creditNo, setCreditNo] = useState(order.creditNo || '')
   const [savingCredit, setSavingCredit] = useState(false)
   const [approvingReturn, setApprovingReturn] = useState(false)
@@ -114,10 +114,14 @@ function ReturnCard({ order, canEdit, canFinance, onCondition, onApprove, onComp
 
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-2xl border shadow-sm p-4 ${
+      selected ? 'border-brand ring-1 ring-brand/30' :
       isPendingApproval ? 'border-purple-200 dark:border-purple-800' : 'border-slate-200 dark:border-slate-700'
     }`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
+        <button
+          onClick={onSelect}
+          className="min-w-0 flex-1 text-left hover:opacity-80 transition-opacity"
+        >
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-xs font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full">RTN</span>
             <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{order.psNo}</span>
@@ -138,7 +142,7 @@ function ReturnCard({ order, canEdit, canFinance, onCondition, onApprove, onComp
               Initiated: {new Date(order.returnInitiatedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}
             </p>
           )}
-        </div>
+        </button>
 
         <div className="shrink-0 flex flex-col items-end gap-2">
           {order.waybillNo && (
@@ -219,7 +223,7 @@ function ReturnCard({ order, canEdit, canFinance, onCondition, onApprove, onComp
   )
 }
 
-export default function ReturnsTab({ orders, onRefresh }) {
+export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect }) {
   const { perm, user } = useAuth()
   const canEdit = perm('returns', 'edit')
   const canFinance = user?.role === 'finance' || user?.role === 'admin'
@@ -272,6 +276,8 @@ export default function ReturnsTab({ orders, onRefresh }) {
           order={order}
           canEdit={canEdit}
           canFinance={canFinance}
+          selected={selectedId === order.id}
+          onSelect={() => onSelect(order.id)}
           onCondition={setConditionOrder}
           onApprove={handleApprove}
           onComplete={handleComplete}

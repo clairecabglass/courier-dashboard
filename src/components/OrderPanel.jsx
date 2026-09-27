@@ -240,7 +240,9 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
 
               {/* Address */}
               <section>
-                <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Delivery Address</h3>
+                <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+                  {order.isReturn ? 'Return Address (ships back to us)' : 'Delivery Address'}
+                </h3>
                 <div className={`rounded-xl p-4 ${editing ? 'bg-white dark:bg-slate-900/60 border-2 border-brand/40' : 'bg-slate-50 dark:bg-slate-700/30'}`}>
                   {editing && editAddress ? (
                     <div className="space-y-2">
