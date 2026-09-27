@@ -101,17 +101,11 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-3">
-                {order.psUrl
-                  ? <a href={order.psUrl} target="_blank" rel="noopener noreferrer"
-                      className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5">
-                      {order.psNo} <ExternalLink size={14} />
-                    </a>
-                  : <span className="text-lg font-bold text-slate-800 dark:text-slate-100">{order.psNo}</span>
-                }
+                <a href={order.psUrl} target="_blank" rel="noopener noreferrer"
+                  className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5">
+                  {order.psNo} <ExternalLink size={14} />
+                </a>
                 <StatusBadge status={order.status} size="lg" />
-                {order.isTest && (
-                  <span className="text-xs font-bold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full">TEST</span>
-                )}
               </div>
               {order.invoiceUrl && (
                 <a href={order.invoiceUrl.startsWith('http') ? order.invoiceUrl : `https://${order.invoiceUrl}`}
@@ -177,13 +171,6 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                   </div>
                 )
               })()}
-
-              {/* Test order sandbox notice */}
-              {order.isTest && (
-                <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-xl p-3 text-xs text-violet-700 dark:text-violet-300">
-                  🧪 <strong>Sandbox order</strong> — nothing here is real. No API calls, no bookings, no sheet writes. Only you can see this.
-                </div>
-              )}
 
               {/* Sales read-only notice */}
               {!canEdit && (

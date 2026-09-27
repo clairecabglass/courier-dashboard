@@ -146,9 +146,6 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
 
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
-                      {order.isTest && (
-                        <span className="text-[10px] font-bold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full">TEST</span>
-                      )}
                       {order.isReturn && (
                         <span className="text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-1.5 py-0.5 rounded-full">RTN</span>
                       )}
