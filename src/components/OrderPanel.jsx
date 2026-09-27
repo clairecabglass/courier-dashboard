@@ -398,26 +398,41 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                       </select>
                     </div>
                     <hr className="border-slate-100 dark:border-slate-700" />
-                    {!order.staged && !terminal && (
+                    {/* Returns skip the Picked requirement but need Finance approval first */}
+                    {order.isReturn && order.status === STATUS.PENDING_FINANCE_APPROVAL && !terminal && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+                        <span className="text-purple-400 text-lg leading-none">🔒</span>
+                        <p className="text-xs text-purple-700 dark:text-purple-300">Waiting for <strong className="font-semibold">Finance approval</strong> before this return can be booked.</p>
+                      </div>
+                    )}
+                    {!order.isReturn && !order.staged && !terminal && (
                       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600">
                         <span className="text-slate-400 dark:text-slate-500 text-lg leading-none">⬜</span>
                         <p className="text-xs text-slate-500 dark:text-slate-400">Order must be marked as <strong className="font-semibold text-slate-600 dark:text-slate-300">Picked</strong> on the Staged tab before booking.</p>
                       </div>
                     )}
-                    <div className={`flex items-center justify-between ${!order.staged && !terminal ? 'opacity-40 pointer-events-none select-none' : ''}`}>
-                      <div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Approved</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Authorise this shipment</p>
-                      </div>
-                      <Toggle checked={order.approved} onChange={v => onUpdate({ approved: v })} disabled={terminal || !order.staged} />
-                    </div>
-                    <div className={`flex items-center justify-between ${!order.staged && !terminal ? 'opacity-40 pointer-events-none select-none' : ''}`}>
-                      <div>
-                        <p className={`text-sm font-medium ${(!order.approved || !order.staged) ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>Buy Label</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{!order.staged && !terminal ? 'Pick order first' : !order.approved ? 'Approve first' : 'Trigger waybill booking'}</p>
-                      </div>
-                      <Toggle checked={order.buyLabel} onChange={v => onUpdate({ buyLabel: v })} disabled={terminal || !order.approved || !order.staged} />
-                    </div>
+                    {(() => {
+                      const pendingApproval = order.isReturn && order.status === STATUS.PENDING_FINANCE_APPROVAL
+                      const needsPick = !order.isReturn && !order.staged
+                      return (
+                        <>
+                          <div className={`flex items-center justify-between ${(needsPick || pendingApproval) && !terminal ? 'opacity-40 pointer-events-none select-none' : ''}`}>
+                            <div>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Approved</p>
+                              <p className="text-xs text-slate-400 mt-0.5">Authorise this shipment</p>
+                            </div>
+                            <Toggle checked={order.approved} onChange={v => onUpdate({ approved: v })} disabled={terminal || needsPick || pendingApproval} />
+                          </div>
+                          <div className={`flex items-center justify-between ${(needsPick || pendingApproval) && !terminal ? 'opacity-40 pointer-events-none select-none' : ''}`}>
+                            <div>
+                              <p className={`text-sm font-medium ${(!order.approved || needsPick || pendingApproval) ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>Buy Label</p>
+                              <p className="text-xs text-slate-400 mt-0.5">{needsPick && !terminal ? 'Pick order first' : pendingApproval ? 'Awaiting Finance approval' : !order.approved ? 'Approve first' : 'Trigger waybill booking'}</p>
+                            </div>
+                            <Toggle checked={order.buyLabel} onChange={v => onUpdate({ buyLabel: v })} disabled={terminal || !order.approved || needsPick || pendingApproval} />
+                          </div>
+                        </>
+                      )
+                    })()}
                   </div>
                 </section>
               )}
