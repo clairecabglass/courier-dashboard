@@ -554,7 +554,7 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
               )}
 
               {/* Back-order flag */}
-              {canEdit && !inHistory && onToggleBackOrder && (
+              {canEdit && !inHistory && !order.isReturn && onToggleBackOrder && (
                 <section>
                   <button
                     onClick={onToggleBackOrder}
