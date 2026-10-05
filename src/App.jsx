@@ -31,7 +31,8 @@ function Dashboard() {
   const { user, can, perm } = useAuth()
   const { addLog } = useActivity()
   const isClaire = user?.name === 'Claire'
-  const test = useTestOrders(isClaire)
+  const isSandbox = user?.role === 'sandbox'
+  const test = useTestOrders(isClaire || isSandbox)
   const [dark, toggleDark] = useDarkMode()
   const [archiving, setArchiving] = useState(false)
   const cachedData = LIVE ? (() => { try { const c = localStorage.getItem('cabglass_orders_cache'); return c ? JSON.parse(c) : null } catch (_) { return null } })() : null
@@ -40,7 +41,7 @@ function Dashboard() {
   const [packedIds, setPackedIds] = useState(() => new Set())
   const [stagedIds, setStagedIds] = useState(() => new Set())
   const [backOrderIds, setBackOrderIds] = useState(() => new Set())
-  const [loading, setLoading] = useState(LIVE && !cachedData)
+  const [loading, setLoading] = useState(LIVE && !cachedData && !isSandbox)
   const [selectedId, setSelectedId] = useState(null)
   const [activeTab, setActiveTab] = useState(landingTab(user))
   const [activeFilter, setActiveFilter] = useState('all')
@@ -97,7 +98,7 @@ function Dashboard() {
 
   // Load live data from the sheet (when configured)
   const loadOrders = async (opts = {}) => {
-    if (!LIVE) return
+    if (!LIVE || isSandbox) { setLoading(false); return }
     try {
       const { orders, history } = await fetchOrders()
       applyLoaded(orders, history, opts)
@@ -111,7 +112,7 @@ function Dashboard() {
   }
 
   const loadWHData = async () => {
-    if (!LIVE) return
+    if (!LIVE || isSandbox) return
     try {
       const data = await fetchWHData()
       setWHData(data)
@@ -129,9 +130,9 @@ function Dashboard() {
     return () => clearInterval(t)
   }, [])
 
-  // Merge test orders (Claire-only, localStorage) into the displayed lists
-  const allOrders  = isClaire ? [...test.testOrders,  ...orders]  : orders
-  const allHistory = isClaire ? [...test.testHistory, ...history] : history
+  // Sandbox: only fake data. Claire: mixed. Everyone else: real only.
+  const allOrders  = isSandbox ? test.testOrders  : (isClaire ? [...test.testOrders,  ...orders]  : orders)
+  const allHistory = isSandbox ? test.testHistory : (isClaire ? [...test.testHistory, ...history] : history)
 
   const source = activeTab === 'history' ? allHistory : allOrders
 
@@ -250,6 +251,7 @@ function Dashboard() {
 
   // Stage 1: mark packed (toggle)
   const togglePacked = (id) => {
+    if (test.isTestId(id)) { test.updateTestOrder(id, { packed: !allOrders.find(o => o.id === id)?.packed }); return }
     const order = [...orders, ...history].find(o => o.id === id)
     const willPack = !packedIds.has(id)
     setPackedIds(prev => {
@@ -263,6 +265,7 @@ function Dashboard() {
 
   // Staged page: mark item physically picked (toggle)
   const toggleStaged = (id) => {
+    if (test.isTestId(id)) { test.updateTestOrder(id, { staged: !allOrders.find(o => o.id === id)?.staged }); return }
     const order = [...orders, ...history].find(o => o.id === id)
     const willStage = !stagedIds.has(id)
     setStagedIds(prev => {
@@ -276,6 +279,7 @@ function Dashboard() {
   }
 
   const toggleBackOrder = (id) => {
+    if (test.isTestId(id)) { test.updateTestOrder(id, { backOrder: !allOrders.find(o => o.id === id)?.backOrder }); return }
     const order = orders.find(o => o.id === id)
     if (!order) return
     const willFlag = !backOrderIds.has(id)
@@ -402,33 +406,44 @@ function Dashboard() {
             {activeTab === 'pricing'  && <GlassPricingPage />}
             {activeTab === 'userguide' && <UserGuidePage />}
             {activeTab === 'staged' && (
-              <StagedTab orders={orders} stagedIds={stagedIds} onTogglePicked={toggleStaged} onSaveNote={saveOrderNote} />
+              <StagedTab orders={allOrders} stagedIds={stagedIds} onTogglePicked={toggleStaged} onSaveNote={saveOrderNote} />
             )}
             {activeTab === 'dispatch' && (
-              <DispatchTab orders={orders} history={history}
+              <DispatchTab orders={allOrders} history={allHistory}
                 packedIds={packedIds} onTogglePacked={togglePacked} onDispatch={dispatchOrder}
                 onUndoDispatch={undoDispatch} />
             )}
             {activeTab === 'admin'    && <AdminPage orders={orders} history={history} />}
-            {activeTab === 'returns'  && <ReturnsTab orders={orders} onRefresh={loadOrders} selectedId={selectedId} onSelect={(id) => setSelectedId(prev => prev === id ? null : id)} />}
+            {activeTab === 'returns'  && <ReturnsTab orders={allOrders} onRefresh={loadOrders} selectedId={selectedId} onSelect={(id) => setSelectedId(prev => prev === id ? null : id)} />}
 
             {(activeTab === 'orders' || activeTab === 'history') && (
               <>
-                {activeTab === 'orders' && <StatsBar orders={allOrders.filter(o => !o.isTest)} />}
+                {isSandbox && (
+                  <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-violet-100 dark:bg-violet-900/30 border border-violet-300 dark:border-violet-700">
+                    <span className="text-xl">🧪</span>
+                    <div>
+                      <p className="text-sm font-semibold text-violet-800 dark:text-violet-200">Sandbox mode</p>
+                      <p className="text-xs text-violet-700 dark:text-violet-300">Everything here is fake. No real orders, no API calls, nothing is sent or booked for real.</p>
+                    </div>
+                  </div>
+                )}
+                {activeTab === 'orders' && <StatsBar orders={isSandbox ? allOrders : allOrders.filter(o => !o.isTest)} />}
                 {activeTab === 'orders' && perm('orders', 'edit') && (
                   <div className="flex justify-end items-center gap-2 mb-3">
-                    {isClaire && (
+                    {(isClaire || isSandbox) && (
                       <button onClick={test.createTestOrder}
-                        title="Create a fake order for testing — only you can see this"
+                        title="Create a fake order for testing"
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 shadow-sm hover:border-violet-400 transition-colors">
                         🧪 New test order
                       </button>
                     )}
-                    <button onClick={handleArchive} disabled={archiving}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-colors disabled:opacity-50">
-                      <Archive size={14} className={archiving ? 'animate-pulse' : ''} />
-                      {archiving ? 'Moving…' : 'Move booked to History'}
-                    </button>
+                    {!isSandbox && (
+                      <button onClick={handleArchive} disabled={archiving}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-colors disabled:opacity-50">
+                        <Archive size={14} className={archiving ? 'animate-pulse' : ''} />
+                        {archiving ? 'Moving…' : 'Move booked to History'}
+                      </button>
+                    )}
                   </div>
                 )}
                 <FilterBar orders={source} activeFilter={activeFilter} setActiveFilter={setActiveFilter}

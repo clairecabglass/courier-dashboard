@@ -33,6 +33,7 @@ export const ROLES = {
   finance:  { label: 'Finance' },
   sales:    { label: 'Sales' },
   dispatch: { label: 'Dispatch' },
+  sandbox:  { label: 'Sandbox' },
 }
 
 const P = (view, edit) => ({ view, edit })
@@ -49,6 +50,8 @@ export function defaultPermsForRole(role) {
       return { orders: P(1,0), upload: P(1,0), staged: P(1,0), dispatch: P(1,0), wh: P(1,0), rebin: P(0,0), pricing: P(1,0), returns: P(0,0), admin: P(0,0), loudSounds: P(0,0) }
     case 'dispatch':
       return { orders: P(0,0), upload: P(0,0), staged: P(1,1), dispatch: P(1,1), wh: P(0,0), rebin: P(0,0), pricing: P(0,0), returns: P(0,0), admin: P(0,0), loudSounds: P(0,0) }
+    case 'sandbox':
+      return { orders: P(1,1), upload: P(0,0), staged: P(1,1), dispatch: P(1,1), wh: P(0,0), rebin: P(0,0), pricing: P(0,0), returns: P(1,1), admin: P(0,0), loudSounds: P(0,0) }
     default:
       return { orders: P(1,0), upload: P(0,0), staged: P(1,0), dispatch: P(0,0), wh: P(0,0), rebin: P(0,0), pricing: P(0,0), returns: P(0,0), admin: P(0,0), loudSounds: P(0,0) }
   }
@@ -137,7 +140,20 @@ export function AuthProvider({ children }) {
     if (LIVE) saveUsers(nextUsers).catch(err => console.error('Save users failed:', err))
   }
 
+  const SANDBOX_USER = {
+    id: 'sandbox',
+    name: 'Sandbox',
+    username: 'sandbox',
+    role: 'sandbox',
+    permissions: defaultPermsForRole('sandbox'),
+  }
+
   const login = (username, password) => {
+    // Sandbox account is handled entirely client-side — never touches the server.
+    if (username.trim().toLowerCase() === 'sandbox' && password === 'sandbox123') {
+      setUser(SANDBOX_USER); writeSession(SANDBOX_USER)
+      return SANDBOX_USER
+    }
     const found = users.find(
       u => u.username === username.trim().toLowerCase() && u.password === password
     )
