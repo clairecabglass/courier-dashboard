@@ -134,6 +134,10 @@ function Dashboard() {
   const allOrders  = isSandbox ? test.testOrders  : (isClaire ? [...test.testOrders,  ...orders]  : orders)
   const allHistory = isSandbox ? test.testHistory : (isClaire ? [...test.testHistory, ...history] : history)
 
+  // For sandbox, packed/staged state lives on the order object (not in the Sets which are server-sourced).
+  const effectivePackedIds  = useMemo(() => isSandbox ? new Set(allOrders.filter(o => o.packed).map(o => o.id))  : packedIds,  [isSandbox, allOrders, packedIds])
+  const effectiveStagedIds  = useMemo(() => isSandbox ? new Set(allOrders.filter(o => o.staged).map(o => o.id))  : stagedIds,  [isSandbox, allOrders, stagedIds])
+
   const source = activeTab === 'history' ? allHistory : allOrders
 
   const filtered = useMemo(() => {
@@ -406,11 +410,11 @@ function Dashboard() {
             {activeTab === 'pricing'  && <GlassPricingPage />}
             {activeTab === 'userguide' && <UserGuidePage />}
             {activeTab === 'staged' && (
-              <StagedTab orders={allOrders} stagedIds={stagedIds} onTogglePicked={toggleStaged} onSaveNote={saveOrderNote} />
+              <StagedTab orders={allOrders} stagedIds={effectiveStagedIds} onTogglePicked={toggleStaged} onSaveNote={saveOrderNote} />
             )}
             {activeTab === 'dispatch' && (
               <DispatchTab orders={allOrders} history={allHistory}
-                packedIds={packedIds} onTogglePacked={togglePacked} onDispatch={dispatchOrder}
+                packedIds={effectivePackedIds} onTogglePacked={togglePacked} onDispatch={dispatchOrder}
                 onUndoDispatch={undoDispatch} />
             )}
             {activeTab === 'admin'    && <AdminPage orders={orders} history={history} />}
