@@ -414,7 +414,28 @@ function Dashboard() {
                 onUndoDispatch={undoDispatch} />
             )}
             {activeTab === 'admin'    && <AdminPage orders={orders} history={history} />}
-            {activeTab === 'returns'  && <ReturnsTab orders={allOrders} onRefresh={loadOrders} selectedId={selectedId} onSelect={(id) => setSelectedId(prev => prev === id ? null : id)} />}
+            {activeTab === 'returns'  && (
+              <ReturnsTab
+                orders={allOrders}
+                onRefresh={loadOrders}
+                selectedId={selectedId}
+                onSelect={(id) => setSelectedId(prev => prev === id ? null : id)}
+                sandboxHandlers={isSandbox ? {
+                  onApprove:  (psNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.approveTestReturn(o.id) },
+                  onCondition:(psNo, condition, note) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.conditionTestReturn(o.id, condition, note) },
+                  onCreditNo: (psNo, creditNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.creditNoTestReturn(o.id, creditNo) },
+                  onComplete: (psNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.completeTestReturn(o.id) },
+                } : null}
+              />
+            )}
+            {activeTab === 'rebin' && (
+              <RebinPage
+                orders={allOrders}
+                onRebin={isSandbox
+                  ? (id, condition, note, location) => Promise.resolve(test.rebinTestOrder(id, location, condition, note))
+                  : null}
+              />
+            )}
 
             {(activeTab === 'orders' || activeTab === 'history') && (
               <>
@@ -475,7 +496,14 @@ function Dashboard() {
         <ReturnModal
           order={returnOrder}
           onClose={() => setReturnOrder(null)}
-          onCreated={(rtnPs) => { notify(`Return ${rtnPs} created`); loadOrders() }}
+          onCreated={(rtnPs) => { notify(`Return ${rtnPs} created`); if (!isSandbox) loadOrders() }}
+          createFn={isSandbox
+            ? (psNo, items, buyerArranges) => {
+                const parent = [...allOrders, ...allHistory].find(o => o.psNo === psNo)
+                const rtnPs = test.createTestReturn(parent, items, buyerArranges)
+                return Promise.resolve({ rtnPs })
+              }
+            : null}
         />
       )}
 

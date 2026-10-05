@@ -4,6 +4,18 @@
 import { useState, useCallback } from 'react'
 import { STATUS } from '../mockData'
 
+let _rtnSeq = null
+function nextRtnSeq(orders, history) {
+  if (_rtnSeq !== null) { _rtnSeq++; return _rtnSeq }
+  const all = [...orders, ...history]
+  const nums = all
+    .filter(o => o.isReturn && o.psNo.startsWith('RTN-TEST-'))
+    .map(o => parseInt(o.psNo.replace('RTN-TEST-', ''), 10))
+    .filter(n => !isNaN(n))
+  _rtnSeq = nums.length ? Math.max(...nums) + 1 : 1
+  return _rtnSeq
+}
+
 const STORAGE_KEY = 'cabglass_test_orders_v1'
 const HISTORY_KEY = 'cabglass_test_history_v1'
 
@@ -23,9 +35,9 @@ function nextSeq(orders, history) {
   return _seq
 }
 
-export function useTestOrders(isClaire) {
-  const [testOrders,  setTO] = useState(() => { try { return isClaire ? load(STORAGE_KEY) : [] } catch { return [] } })
-  const [testHistory, setTH] = useState(() => { try { return isClaire ? load(HISTORY_KEY) : [] } catch { return [] } })
+export function useTestOrders(enabled) {
+  const [testOrders,  setTO] = useState(() => { try { return enabled ? load(STORAGE_KEY) : [] } catch { return [] } })
+  const [testHistory, setTH] = useState(() => { try { return enabled ? load(HISTORY_KEY) : [] } catch { return [] } })
 
   const persist = useCallback((orders, history) => {
     save(STORAGE_KEY, orders)
@@ -35,7 +47,7 @@ export function useTestOrders(isClaire) {
   }, [])
 
   const createTestOrder = useCallback(() => {
-    if (!isClaire) return
+    if (!enabled) return
     const to = load(STORAGE_KEY)
     const th = load(HISTORY_KEY)
     const seq = nextSeq(to, th)
@@ -55,10 +67,10 @@ export function useTestOrders(isClaire) {
       isReturn: false, linkedPs: null,
     }
     persist([order, ...to], th)
-  }, [isClaire, persist])
+  }, [enabled, persist])
 
   const updateTestOrder = useCallback((id, changes) => {
-    if (!isClaire) return
+    if (!enabled) return
     const to = load(STORAGE_KEY)
     const order = to.find(o => o.id === id)
     let extra = {}
@@ -70,45 +82,121 @@ export function useTestOrders(isClaire) {
       if (!extra.status) extra.status = STATUS.QUOTED
     }
     persist(to.map(o => o.id === id ? { ...o, ...changes, ...extra } : o), load(HISTORY_KEY))
-  }, [isClaire, persist])
+  }, [enabled, persist])
 
   const saveTestNote = useCallback((id, note) => {
-    if (!isClaire) return
+    if (!enabled) return
     const to = load(STORAGE_KEY)
     persist(to.map(o => o.id === id ? { ...o, note } : o), load(HISTORY_KEY))
-  }, [isClaire, persist])
+  }, [enabled, persist])
 
   const archiveTestOrder = useCallback((id) => {
-    if (!isClaire) return
+    if (!enabled) return
     const to = load(STORAGE_KEY); const th = load(HISTORY_KEY)
     const hit = to.find(o => o.id === id)
     if (!hit) return
     persist(to.filter(o => o.id !== id), [{ ...hit, archivedAt: new Date().toISOString() }, ...th])
-  }, [isClaire, persist])
+  }, [enabled, persist])
 
   const restoreTestOrder = useCallback((id) => {
-    if (!isClaire) return
+    if (!enabled) return
     const to = load(STORAGE_KEY); const th = load(HISTORY_KEY)
     const hit = th.find(o => o.id === id)
     if (!hit) return
     persist([{ ...hit, archivedAt: undefined }, ...to], th.filter(o => o.id !== id))
-  }, [isClaire, persist])
+  }, [enabled, persist])
 
   const deleteTestOrder = useCallback((id) => {
-    if (!isClaire) return
+    if (!enabled) return
     const to = load(STORAGE_KEY); const th = load(HISTORY_KEY)
     persist(to.filter(o => o.id !== id), th.filter(o => o.id !== id))
-  }, [isClaire, persist])
+  }, [enabled, persist])
+
+  const createTestReturn = useCallback((parentOrder, items, buyerArranges) => {
+    const to = load(STORAGE_KEY)
+    const th = load(HISTORY_KEY)
+    const seq = nextRtnSeq(to, th)
+    const psNo = `RTN-TEST-${String(seq).padStart(3, '0')}`
+    const rtn = {
+      id:                   `test-${Date.now()}`,
+      psNo,
+      isTest:               true,
+      isReturn:             true,
+      linkedPs:             parentOrder.psNo,
+      buyerArranges,
+      returnInitiatedAt:    new Date().toISOString(),
+      dateReceived:         new Date().toISOString(),
+      status:               STATUS.PENDING_FINANCE_APPROVAL,
+      customer:             parentOrder.customer,
+      address:              parentOrder.address,
+      items,
+      tcgQuote:             null, epxQuote: null, selectedCourier: '',
+      approved:             false, buyLabel: false, staged: true, packed: false,
+      waybillNo:            '', waybillUrl: '', note: '', backOrder: false,
+      returnCondition:      null, returnNote: '', creditNo: '',
+      rebinLocation:        '', rebinned: false,
+    }
+    persist([rtn, ...to], th)
+    return psNo
+  }, [persist])
+
+  const approveTestReturn = useCallback((id) => {
+    const to = load(STORAGE_KEY)
+    persist(to.map(o => o.id === id ? { ...o, status: STATUS.READY_FOR_QUOTE } : o), load(HISTORY_KEY))
+  }, [persist])
+
+  const conditionTestReturn = useCallback((id, condition, note) => {
+    const to = load(STORAGE_KEY)
+    persist(to.map(o => o.id === id ? {
+      ...o,
+      returnCondition:    condition,
+      returnNote:         note,
+      status:             STATUS.CONDITION_CHECKED,
+      conditionCheckedAt: new Date().toISOString(),
+    } : o), load(HISTORY_KEY))
+  }, [persist])
+
+  const rebinTestOrder = useCallback((id, location, condition, note) => {
+    const to = load(STORAGE_KEY)
+    persist(to.map(o => o.id === id ? {
+      ...o,
+      rebinLocation:      location,
+      rebinned:           true,
+      rebinnedAt:         new Date().toISOString(),
+      returnCondition:    condition || o.returnCondition,
+      returnNote:         note      || o.returnNote,
+      conditionCheckedAt: new Date().toISOString(),
+      status:             STATUS.CONDITION_CHECKED,
+    } : o), load(HISTORY_KEY))
+  }, [persist])
+
+  const creditNoTestReturn = useCallback((id, creditNo) => {
+    const to = load(STORAGE_KEY)
+    persist(to.map(o => o.id === id ? { ...o, creditNo } : o), load(HISTORY_KEY))
+  }, [persist])
+
+  const completeTestReturn = useCallback((id) => {
+    const to = load(STORAGE_KEY); const th = load(HISTORY_KEY)
+    const hit = to.find(o => o.id === id)
+    if (!hit) return
+    persist(to.filter(o => o.id !== id), [{ ...hit, archivedAt: new Date().toISOString() }, ...th])
+  }, [persist])
 
   return {
-    testOrders:      isClaire ? testOrders  : [],
-    testHistory:     isClaire ? testHistory : [],
+    testOrders:        testOrders,
+    testHistory:       testHistory,
     createTestOrder,
     updateTestOrder,
     saveTestNote,
     archiveTestOrder,
     restoreTestOrder,
     deleteTestOrder,
+    createTestReturn,
+    approveTestReturn,
+    conditionTestReturn,
+    rebinTestOrder,
+    creditNoTestReturn,
+    completeTestReturn,
     isTestId: (id) => typeof id === 'string' && id.startsWith('test-'),
   }
 }

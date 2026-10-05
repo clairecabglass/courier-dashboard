@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { apiCreateReturn } from '../api'
 
-export default function ReturnModal({ order, onClose, onCreated }) {
+export default function ReturnModal({ order, onClose, onCreated, createFn }) {
   const [selected, setSelected] = useState(
     () => new Set(order.items.map((_, i) => i))
   )
@@ -24,7 +24,8 @@ export default function ReturnModal({ order, onClose, onCreated }) {
     setSaving(true)
     setErr('')
     try {
-      const res = await apiCreateReturn(order.psNo, selectedItems, buyerArranges)
+      const fn = createFn || apiCreateReturn
+      const res = await fn(order.psNo, selectedItems, buyerArranges)
       onCreated(res.rtnPs)
       onClose()
     } catch (e) {

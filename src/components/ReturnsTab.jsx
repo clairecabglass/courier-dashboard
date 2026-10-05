@@ -85,7 +85,7 @@ function ConditionModal({ order, onClose, onConfirm }) {
   )
 }
 
-function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onCondition, onApprove, onComplete, onRefresh }) {
+function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onCondition, onApprove, onComplete, onRefresh, onCreditNo }) {
   const [creditNo, setCreditNo] = useState(order.creditNo || '')
   const [savingCredit, setSavingCredit] = useState(false)
   const [approvingReturn, setApprovingReturn] = useState(false)
@@ -93,7 +93,10 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
 
   const handleSaveCredit = async () => {
     setSavingCredit(true)
-    try { await apiUpdateCreditNo(order.psNo, creditNo); onRefresh() }
+    try {
+      if (onCreditNo) { onCreditNo(order.psNo, creditNo) }
+      else { await apiUpdateCreditNo(order.psNo, creditNo); onRefresh() }
+    }
     finally { setSavingCredit(false) }
   }
 
@@ -237,10 +240,10 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
   )
 }
 
-export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect }) {
+export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect, sandboxHandlers }) {
   const { perm, user } = useAuth()
   const canEdit = perm('returns', 'edit')
-  const canFinance = user?.role === 'finance' || user?.role === 'admin'
+  const canFinance = user?.role === 'finance' || user?.role === 'admin' || user?.role === 'sandbox'
   const [conditionOrder, setConditionOrder] = useState(null)
 
   const returnOrders = (orders ?? [])
@@ -251,16 +254,19 @@ export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect }) 
     })
 
   const handleCondition = async (psNo, condition, note) => {
+    if (sandboxHandlers) { sandboxHandlers.onCondition(psNo, condition, note); return }
     await apiUpdateReturnCondition(psNo, condition, note)
     onRefresh()
   }
 
   const handleApprove = async (psNo) => {
+    if (sandboxHandlers) { sandboxHandlers.onApprove(psNo); return }
     await apiApproveReturn(psNo)
     onRefresh()
   }
 
   const handleComplete = async (psNo) => {
+    if (sandboxHandlers) { sandboxHandlers.onComplete(psNo); return }
     await apiCompleteReturn(psNo)
     onRefresh()
   }
@@ -296,6 +302,7 @@ export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect }) 
           onApprove={handleApprove}
           onComplete={handleComplete}
           onRefresh={onRefresh}
+          onCreditNo={sandboxHandlers?.onCreditNo}
         />
       ))}
     </div>
