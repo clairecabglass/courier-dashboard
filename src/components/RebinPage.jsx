@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PackageCheck, MapPin } from 'lucide-react'
+import { PackageCheck } from 'lucide-react'
 import { STATUS } from '../mockData'
 
 const CONDITIONS = ['Good Condition', 'Damaged', 'Other']
@@ -15,17 +15,15 @@ const REBINNABLE = [STATUS.BOOKED, STATUS.AWAITING_RETURN, STATUS.CONDITION_CHEC
 function RebinModal({ order, onClose, onConfirm }) {
   const [condition,  setCondition]  = useState(order.returnCondition || '')
   const [note,       setNote]       = useState(order.returnNote      || '')
-  const [location,   setLocation]   = useState(order.rebinLocation   || '')
   const [saving,     setSaving]     = useState(false)
   const [err,        setErr]        = useState('')
 
   const handleConfirm = async () => {
-    if (!condition)          { setErr('Select a condition'); return }
+    if (!condition) { setErr('Select a condition'); return }
     if (condition === 'Other' && !note.trim()) { setErr('A note is required for Other'); return }
-    if (!location.trim())    { setErr('Enter a bin / shelf location'); return }
     setSaving(true)
     try {
-      await onConfirm(order, condition, note.trim(), location.trim())
+      await onConfirm(order, condition, note.trim())
       onClose()
     } catch (e) {
       setErr(e.message || 'Failed to save')
@@ -63,16 +61,7 @@ function RebinModal({ order, onClose, onConfirm }) {
           onChange={e => { setNote(e.target.value); setErr('') }}
         />
 
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Bin / Shelf Location</p>
-        <input
-          type="text"
-          className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-brand/40"
-          placeholder="e.g. A3, Shelf 2, Overflow Bay…"
-          value={location}
-          onChange={e => { setLocation(e.target.value); setErr('') }}
-        />
-
-        {err && <p className="text-sm text-red-500 mb-3">{err}</p>}
+{err && <p className="text-sm text-red-500 mb-3">{err}</p>}
 
         <div className="flex gap-2 justify-end">
           <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Cancel</button>
@@ -122,15 +111,14 @@ function RebinCard({ order, onRebin }) {
             </div>
           )}
 
-          {alreadyRebinned && order.rebinLocation && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
-              <MapPin size={12} />
-              <span className="font-medium">{order.rebinLocation}</span>
+          {alreadyRebinned && (
+            <div className="mt-3 flex items-center gap-2 text-xs">
               {order.returnCondition && (
-                <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${COND_CLS[order.returnCondition] || COND_CLS['Other']}`}>
+                <span className={`px-2 py-0.5 rounded-full border font-medium ${COND_CLS[order.returnCondition] || COND_CLS['Other']}`}>
                   {order.returnCondition}
                 </span>
               )}
+              {order.returnNote && <span className="text-slate-500 dark:text-slate-400">— {order.returnNote}</span>}
               {order.rebinnedAt && (
                 <span className="ml-auto text-slate-400 dark:text-slate-500">
                   {new Date(order.rebinnedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -165,8 +153,8 @@ export default function RebinPage({ orders = [], onRebin }) {
       return new Date(b.returnInitiatedAt || b.dateReceived) - new Date(a.returnInitiatedAt || a.dateReceived)
     })
 
-  const handleConfirm = async (order, condition, note, location) => {
-    if (onRebin) await onRebin(order.id, condition, note, location)
+  const handleConfirm = async (order, condition, note) => {
+    if (onRebin) await onRebin(order.id, condition, note)
     setModal(null)
   }
 

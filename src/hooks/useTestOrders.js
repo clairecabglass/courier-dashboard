@@ -158,11 +158,10 @@ export function useTestOrders(enabled) {
     } : o), load(HISTORY_KEY))
   }, [persist])
 
-  const rebinTestOrder = useCallback((id, location, condition, note) => {
+  const rebinTestOrder = useCallback((id, condition, note) => {
     const to = load(STORAGE_KEY)
     persist(to.map(o => o.id === id ? {
       ...o,
-      rebinLocation:      location,
       rebinned:           true,
       rebinnedAt:         new Date().toISOString(),
       returnCondition:    condition || o.returnCondition,

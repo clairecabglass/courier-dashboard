@@ -436,7 +436,7 @@ function Dashboard() {
               <RebinPage
                 orders={allOrders}
                 onRebin={isSandbox
-                  ? (id, condition, note, location) => Promise.resolve(test.rebinTestOrder(id, location, condition, note))
+                  ? (id, condition, note) => Promise.resolve(test.rebinTestOrder(id, condition, note))
                   : null}
               />
             )}
