@@ -493,7 +493,7 @@ function Dashboard() {
         onMoveToHistory={() => selectedOrder && moveToHistory([selectedOrder.id])}
         onRestore={() => selectedOrder && restoreFromHistory(selectedOrder.id)}
         onToggleBackOrder={() => selectedOrder && toggleBackOrder(selectedOrder.id)}
-        onCreateReturn={perm('returns', 'edit') ? (order) => setReturnOrder(order) : null}
+        onCreateReturn={perm('orders', 'view') ? (order) => setReturnOrder(order) : null}
         inHistory={selectedInHistory} />
 
       {returnOrder && (
