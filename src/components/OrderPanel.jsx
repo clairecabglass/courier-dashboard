@@ -100,12 +100,18 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-3">
-                <a href={order.psUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5">
-                  {order.psNo} <ExternalLink size={14} />
-                </a>
+              <div className="flex items-center gap-3 flex-wrap">
+                {order.psUrl
+                  ? <a href={order.psUrl} target="_blank" rel="noopener noreferrer"
+                      className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5">
+                      {order.psNo} <ExternalLink size={14} />
+                    </a>
+                  : <span className="text-lg font-bold text-slate-800 dark:text-slate-100">{order.psNo}</span>
+                }
                 <StatusBadge status={order.status} size="lg" />
+                {order.isTest && (
+                  <span className="text-xs font-bold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full">TEST</span>
+                )}
               </div>
               {order.invoiceUrl && (
                 <a href={order.invoiceUrl.startsWith('http') ? order.invoiceUrl : `https://${order.invoiceUrl}`}
@@ -146,6 +152,37 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
           {/* Body */}
           <div className="flex-1 overflow-y-auto scrollbar-thin">
             <div className="p-5 space-y-5">
+
+              {/* Sandbox controls — only for test orders */}
+              {order.isTest && (
+                <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-xl p-3 space-y-2">
+                  <p className="text-xs font-semibold text-violet-700 dark:text-violet-300">🧪 Sandbox order — no real API calls</p>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-violet-600 dark:text-violet-400 shrink-0">Jump to stage:</label>
+                    <select
+                      value=""
+                      onChange={e => {
+                        const s = e.target.value
+                        if (!s) return
+                        const extra = {}
+                        if (s === STATUS.QUOTED)  { extra.tcgQuote = order.tcgQuote || '150.00'; extra.selectedCourier = order.selectedCourier || 'TCG' }
+                        if (s === STATUS.BOOKED)  { extra.tcgQuote = order.tcgQuote || '150.00'; extra.selectedCourier = order.selectedCourier || 'TCG'; extra.approved = true; extra.buyLabel = true; extra.waybillNo = order.waybillNo || `FAKE-${Math.random().toString(36).slice(2,8).toUpperCase()}` }
+                        if (s === STATUS.READY_FOR_QUOTE) { extra.approved = false; extra.buyLabel = false }
+                        onUpdate({ status: s, ...extra })
+                        e.target.value = ''
+                      }}
+                      className="flex-1 text-xs px-2 py-1.5 border border-violet-300 dark:border-violet-600 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-400">
+                      <option value="">Select stage…</option>
+                      <option value={STATUS.READY_FOR_QUOTE}>Ready For Quote</option>
+                      <option value={STATUS.QUOTED}>Quoted</option>
+                      <option value={STATUS.BOOKED}>Booked</option>
+                      <option value={STATUS.PENDING_FINANCE_APPROVAL}>Pending Finance Approval</option>
+                      <option value={STATUS.AWAITING_RETURN}>Awaiting Return</option>
+                      <option value={STATUS.CONDITION_CHECKED}>Condition Checked</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               {/* Error from the sheet */}
               {order.errorMessage && (

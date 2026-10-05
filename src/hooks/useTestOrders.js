@@ -74,7 +74,9 @@ export function useTestOrders(enabled) {
     const to = load(STORAGE_KEY)
     const order = to.find(o => o.id === id)
     let extra = {}
-    if (order && changes.buyLabel === true && (changes.approved ?? order.approved)) {
+    const willApprove  = changes.approved  ?? order.approved
+    const willBuyLabel = changes.buyLabel  ?? order.buyLabel
+    if (order && willApprove && willBuyLabel && !order.waybillNo) {
       extra = { status: STATUS.BOOKED, waybillNo: `FAKE-${Math.random().toString(36).slice(2,8).toUpperCase()}`, bookedAt: new Date().toISOString() }
     }
     if (order && changes.selectedCourier && !order.tcgQuote) {

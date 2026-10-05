@@ -267,14 +267,16 @@ export default function DispatchTab({ orders, history, packedIds, onTogglePacked
     return true
   }), [booked, search])
 
-  // sort: to-pack first, packed after (packed are ready to dispatch)
-  const sorted = [...filtered].sort((a, b) => (packedIds.has(a.id) ? 1 : 0) - (packedIds.has(b.id) ? 1 : 0))
+  const isPkd = (o) => packedIds.has(o.id) || !!o.packed
 
-  const toPack = booked.filter(o => !packedIds.has(o.id)).length
-  const packedReady = booked.filter(o => packedIds.has(o.id)).length
+  // sort: to-pack first, packed after (packed are ready to dispatch)
+  const sorted = [...filtered].sort((a, b) => (isPkd(a) ? 1 : 0) - (isPkd(b) ? 1 : 0))
+
+  const toPack = booked.filter(o => !isPkd(o)).length
+  const packedReady = booked.filter(o => isPkd(o)).length
 
   // Manifest = packed but not yet dispatched (i.e. packed booked orders still here)
-  const packedOrders = booked.filter(o => packedIds.has(o.id))
+  const packedOrders = booked.filter(o => isPkd(o))
 
   // Dispatched today = history orders whose dispatchedAt is today
   const isToday = (iso) => {
@@ -296,7 +298,7 @@ export default function DispatchTab({ orders, history, packedIds, onTogglePacked
     return (
       <DispatchDetail
         order={detailOrder}
-        isPacked={packedIds.has(detailOrder.id)}
+        isPacked={packedIds.has(detailOrder.id) || !!detailOrder.packed}
         dispatchedMode={!!dispatchedDetail}
         onUndoDispatch={(ps) => { onUndoDispatch(ps); setDetailId(null) }}
         onBack={() => setDetailId(null)}
@@ -357,7 +359,7 @@ export default function DispatchTab({ orders, history, packedIds, onTogglePacked
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {sorted.map(o => (
             <DispatchCard key={o.id} order={o}
-              isPacked={packedIds.has(o.id)}
+              isPacked={isPkd(o)}
               onOpen={setDetailId}
               onTogglePacked={onTogglePacked}
               onDispatch={onDispatch} />
