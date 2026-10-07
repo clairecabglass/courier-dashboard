@@ -87,8 +87,8 @@ function loadSession() {
   } catch (e) { return null }
 }
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(loadSession)   // restore session on load
+export function AuthProvider({ children, _demoUser }) {
+  const [user, setUser] = useState(_demoUser ?? loadSession)   // restore session on load
   const [users, setUsers] = useState(INITIAL_USERS)
 
   // Load the shared user list from the server (so accounts persist & sync)

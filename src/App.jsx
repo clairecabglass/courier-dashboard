@@ -28,7 +28,7 @@ import UploadTab from './components/UploadTab'
 import DispatchTab from './components/DispatchTab'
 import StagedTab from './components/StagedTab'
 
-function Dashboard() {
+export function Dashboard() {
   const { user, can, perm } = useAuth()
   const { addLog } = useActivity()
   const isClaire = user?.name === 'Claire'

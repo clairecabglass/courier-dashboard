@@ -102,12 +102,12 @@ export default function Header({ activeTab, setActiveTab, onRefresh, refreshing,
                       </button>
                     )}
                     {perm('orders', 'view') && (
-                      <button onClick={() => goTab('history')} className={itemCls(activeTab === 'history')}>
+                      <button data-tab="history" onClick={() => goTab('history')} className={itemCls(activeTab === 'history')}>
                         History
                       </button>
                     )}
                     {perm('returns', 'view') && (
-                      <button onClick={() => goTab('returns')} className={itemCls(activeTab === 'returns')}>
+                      <button data-tab="returns" onClick={() => goTab('returns')} className={itemCls(activeTab === 'returns')}>
                         Returns
                       </button>
                     )}
@@ -151,7 +151,7 @@ export default function Header({ activeTab, setActiveTab, onRefresh, refreshing,
                 {openMenu === 'warehouse' && (
                   <div className="absolute left-0 top-full mt-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-1 min-w-[140px] z-[100]">
                     {warehouseItems.map(({ key, label }) => (
-                      <button key={key} onClick={() => goTab(key)} className={itemCls(activeTab === key)}>
+                      <button key={key} data-tab={key} onClick={() => goTab(key)} className={itemCls(activeTab === key)}>
                         {label}
                       </button>
                     ))}
