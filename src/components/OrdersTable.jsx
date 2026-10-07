@@ -209,30 +209,38 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
                   </td>
 
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <div title={!order.staged && !terminal ? 'Mark as picked first' : undefined}>
-                      <Toggle checked={order.approved} onChange={v => canEdit && onUpdate(order.id, { approved: v })} disabled={!canEdit || terminal || !order.staged} />
+                    <div title={!order.staged && !terminal && !order.isReturn ? 'Mark as picked first' : undefined}>
+                      <Toggle checked={order.approved} onChange={v => canEdit && onUpdate(order.id, { approved: v })} disabled={!canEdit || terminal || (!order.staged && !order.isReturn)} />
                     </div>
                   </td>
 
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <div title={!order.staged && !terminal ? 'Mark as picked first' : undefined}>
-                      <Toggle checked={order.buyLabel} onChange={v => canEdit && onUpdate(order.id, { buyLabel: v })} disabled={!canEdit || terminal || !order.approved || !order.staged} />
-                    </div>
+                    {order.buyerArranges ? (
+                      <span className="text-xs text-slate-400 dark:text-slate-500">Buyer ships</span>
+                    ) : (
+                      <div title={!order.staged && !terminal && !order.isReturn ? 'Mark as picked first' : undefined}>
+                        <Toggle checked={order.buyLabel} onChange={v => canEdit && onUpdate(order.id, { buyLabel: v })} disabled={!canEdit || terminal || !order.approved || (!order.staged && !order.isReturn)} />
+                      </div>
+                    )}
                   </td>
 
                   {!inHistory && (
                     <td className="px-4 py-3 text-center">
-                      {order.staged
-                        ? <CheckCircle2 size={16} className="text-green-500 mx-auto" />
-                        : <Circle size={16} className="text-slate-300 dark:text-slate-600 mx-auto" />}
+                      {order.isReturn
+                        ? <span className="text-slate-300 dark:text-slate-600 text-sm">—</span>
+                        : order.staged
+                          ? <CheckCircle2 size={16} className="text-green-500 mx-auto" />
+                          : <Circle size={16} className="text-slate-300 dark:text-slate-600 mx-auto" />}
                     </td>
                   )}
 
                   {!inHistory && (
                     <td className="px-4 py-3 text-center">
-                      {order.packed
-                        ? <CheckCircle2 size={16} className="text-green-500 mx-auto" />
-                        : <Circle size={16} className="text-slate-300 dark:text-slate-600 mx-auto" />}
+                      {order.isReturn
+                        ? <span className="text-slate-300 dark:text-slate-600 text-sm">—</span>
+                        : order.packed
+                          ? <CheckCircle2 size={16} className="text-green-500 mx-auto" />
+                          : <Circle size={16} className="text-slate-300 dark:text-slate-600 mx-auto" />}
                     </td>
                   )}
 
