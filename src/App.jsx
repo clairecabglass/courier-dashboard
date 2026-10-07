@@ -34,7 +34,7 @@ export function Dashboard() {
   const isClaire = user?.name === 'Claire'
   const isSandbox = user?.role === 'sandbox'
   const isDemo = user?.id === 999
-  const test = useTestOrders(isClaire || isSandbox)
+  const test = useTestOrders(isClaire || isSandbox || isDemo)
   const [dark, toggleDark] = useDarkMode()
   const [archiving, setArchiving] = useState(false)
   const cachedData = (LIVE && !isDemo) ? (() => { try { const c = localStorage.getItem('cabglass_orders_cache'); return c ? JSON.parse(c) : null } catch (_) { return null } })() : null
@@ -426,7 +426,7 @@ export function Dashboard() {
                 onRefresh={loadOrders}
                 selectedId={selectedId}
                 onSelect={(id) => setSelectedId(prev => prev === id ? null : id)}
-                sandboxHandlers={isSandbox ? {
+                sandboxHandlers={(isSandbox || isDemo) ? {
                   onApprove:  (psNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.approveTestReturn(o.id) },
                   onCondition:(psNo, condition, note) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.conditionTestReturn(o.id, condition, note) },
                   onCreditNo: (psNo, creditNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.creditNoTestReturn(o.id, creditNo) },
@@ -438,7 +438,7 @@ export function Dashboard() {
             {activeTab === 'rebin' && (
               <RebinPage
                 orders={allOrders}
-                onRebin={isSandbox
+                onRebin={(isSandbox || isDemo)
                   ? (id, condition, note) => Promise.resolve(test.rebinTestOrder(id, condition, note))
                   : (psNo, condition, note) => apiUpdateReturnCondition(psNo, condition, note).then(() => loadOrders())}
               />
@@ -503,8 +503,8 @@ export function Dashboard() {
         <ReturnModal
           order={returnOrder}
           onClose={() => setReturnOrder(null)}
-          onCreated={(rtnPs) => { notify(`Return ${rtnPs} created`); if (!isSandbox) loadOrders() }}
-          createFn={isSandbox
+          onCreated={(rtnPs) => { notify(`Return ${rtnPs} created`); if (!isSandbox && !isDemo) loadOrders() }}
+          createFn={(isSandbox || isDemo)
             ? (psNo, items, buyerArranges) => {
                 const parent = [...allOrders, ...allHistory].find(o => o.psNo === psNo)
                 const rtnPs = test.createTestReturn(parent, items, buyerArranges)
