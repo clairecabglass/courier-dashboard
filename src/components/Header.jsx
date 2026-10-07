@@ -82,6 +82,7 @@ export default function Header({ activeTab, setActiveTab, onRefresh, refreshing,
             {(perm('orders', 'view') || perm('upload', 'view')) && (
               <div className="relative">
                 <button
+                  data-nav="orders-menu"
                   onClick={() => setOpenMenu(m => m === 'orders' ? null : 'orders')}
                   style={ordersActive ? { backgroundColor: '#111111', color: '#FECD28' } : {}}
                   className={`flex items-center gap-1 ${btnCls(ordersActive)}`}
@@ -141,6 +142,7 @@ export default function Header({ activeTab, setActiveTab, onRefresh, refreshing,
             ) : warehouseItems.length > 0 && (
               <div className="relative">
                 <button
+                  data-nav="warehouse-menu"
                   onClick={() => setOpenMenu(m => m === 'warehouse' ? null : 'warehouse')}
                   style={warehouseActive ? { backgroundColor: '#111111', color: '#FECD28' } : {}}
                   className={`flex items-center gap-1 ${btnCls(warehouseActive)}`}

@@ -1,10 +1,9 @@
-import { useState, useEffect, createContext, useContext } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, LogIn, ChevronRight, ChevronLeft } from 'lucide-react'
 import { AuthProvider } from '../context/AuthContext'
 import { ActivityProvider } from '../context/ActivityContext'
 import { Dashboard } from '../App'
 
-/* Demo user — full admin perms so all tabs are visible */
 const DEMO_USER = {
   id: 999,
   name: 'Demo User',
@@ -24,71 +23,116 @@ const DEMO_USER = {
   },
 }
 
-/* Tutorial steps */
+/* Each step:
+   selector       — element to highlight (null = centre modal)
+   clickToAdvance — if true, clicking the highlighted element auto-advances
+   action         — text shown on the "click here" CTA label
+   title / body   — tooltip content
+   placement      — 'bottom' | 'top' | 'center'
+*/
 const STEPS = [
   {
-    title: 'Welcome to the Returns & Rebin demo',
-    body: 'This is the real CabGlass courier dashboard. Click Next and we\'ll walk you through the returns and rebinning workflow.',
+    title: 'Welcome to the Returns & Rebin tour',
+    body: 'This is the real CabGlass courier dashboard. I\'ll guide you through exactly how returns and rebinning work. Click "Let\'s go" to start.',
     selector: null,
     placement: 'center',
+    clickToAdvance: false,
   },
   {
-    title: 'Returns tab',
-    body: 'The Returns tab shows all active return requests. Returns are completely separate from normal outbound orders.',
+    title: 'Step 1 — Open the Orders menu',
+    body: 'Returns live under the Orders menu. Click the Orders button in the top nav to open the dropdown.',
+    selector: '[data-nav="orders-menu"]',
+    placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Click here to open Orders',
+  },
+  {
+    title: 'Step 2 — Go to Returns',
+    body: 'You can see Orders, Upload, History and Returns here. Click Returns to see all active return requests.',
     selector: '[data-tab="returns"]',
     placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Click Returns',
   },
   {
-    title: 'Finance approval gate',
-    body: 'Every return lands here first as "Pending Finance Approval". Finance must approve before any collection courier is booked — preventing unauthorised returns.',
+    title: 'Step 3 — The Finance approval gate',
+    body: 'Every return starts as "Pending Finance Approval". No courier is booked until Finance approves — this prevents unauthorised collections and credit notes. Click Next to continue.',
     selector: '[data-tab="returns"]',
     placement: 'bottom',
+    clickToAdvance: false,
   },
   {
-    title: 'Creating a return',
-    body: 'Go to History, find the original order, and click "Create Return". Tick the items being returned and choose: does CabGlass book the collection, or does the buyer ship it back themselves?',
+    title: 'Step 4 — Go to History to create a return',
+    body: 'Returns are created from the original order. Open the Orders menu and click History.',
+    selector: '[data-nav="orders-menu"]',
+    placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Open the Orders menu',
+  },
+  {
+    title: 'Step 5 — Click History',
+    body: 'History shows all completed orders. From here you can create a return against any invoiced order.',
     selector: '[data-tab="history"]',
     placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Click History',
   },
   {
-    title: 'Multiple returns per order',
-    body: 'You can create a 2nd or 3rd return for the same order — each gets its own RTN number (RTN-2-25354, RTN-2-25354-2). Each has its own approval, courier booking, and credit note.',
-    selector: '[data-tab="history"]',
+    title: 'Step 6 — Creating a return',
+    body: 'Find an order and click "Create Return" in the side panel. You\'ll select which items are being returned and whether CabGlass books the collection or the buyer ships it themselves. Click Next to continue.',
+    selector: null,
+    placement: 'center',
+    clickToAdvance: false,
+  },
+  {
+    title: 'Step 7 — Open the Warehouse menu',
+    body: 'When returned stock physically arrives, it gets rebinned from the Warehouse menu. Click Warehouse.',
+    selector: '[data-nav="warehouse-menu"]',
     placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Click Warehouse',
   },
   {
-    title: 'Buyer arranges shipping',
-    body: 'When the customer ships it back themselves, no courier is booked. Status becomes "Awaiting Return" — warehouse just watches for inbound stock to arrive without a waybill.',
-    selector: '[data-tab="returns"]',
-    placement: 'bottom',
-  },
-  {
-    title: 'Rebin — when stock arrives',
-    body: 'When returned stock physically arrives, go to the Rebin tab. Select condition (Good / Damaged / Other), write an optional note, and upload photos as evidence.',
+    title: 'Step 8 — Go to Rebin',
+    body: 'The Rebin tab shows all returns waiting to be received. Click Rebin to see it.',
     selector: '[data-tab="rebin"]',
     placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Click Rebin',
   },
   {
-    title: 'Photos create a paper trail',
-    body: 'Photos are optional but powerful — they create an undisputable timestamped record of condition. If a customer disputes a credit amount, the proof is right here.',
-    selector: '[data-tab="rebin"]',
+    title: 'Step 9 — Recording condition',
+    body: 'Click "Record & Rebin" on any return to record its condition (Good / Damaged / Other), add a note, and optionally upload photos. Finance sees this when deciding the credit amount. Click Next to continue.',
+    selector: null,
+    placement: 'center',
+    clickToAdvance: false,
+  },
+  {
+    title: 'Step 10 — Back to Returns to close',
+    body: 'After rebinning, Finance logs the credit note number and clicks "Move to History" — completing the loop. Open Orders and go to Returns to see the final step.',
+    selector: '[data-nav="orders-menu"]',
     placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Open Orders menu',
   },
   {
-    title: 'Finance closes the loop',
-    body: 'Finance sees the condition warehouse recorded. They raise the credit note in the accounting system, log the number here, and click "Move to History" — the return is complete.',
+    title: 'Step 11 — Returns',
+    body: 'Returns in "Condition Checked" status are waiting for Finance to enter the credit note number and close them.',
     selector: '[data-tab="returns"]',
     placement: 'bottom',
+    clickToAdvance: true,
+    action: '👆 Click Returns',
   },
   {
-    title: 'Full audit trail',
-    body: 'Every completed return in History shows who requested it, when Finance approved it, the condition, photos, and the credit note — all linked to the original order. Nothing falls through the cracks.',
-    selector: '[data-tab="history"]',
-    placement: 'bottom',
+    title: '✅ Tour complete!',
+    body: 'That\'s the full returns and rebin workflow:\n\n1. Warehouse creates a return\n2. Finance approves\n3. Courier is booked (or buyer ships)\n4. Warehouse records condition + photos on arrival\n5. Finance logs the credit note and closes\n\nEvery step is tracked, auditable, and linked to the original order.',
+    selector: null,
+    placement: 'center',
+    clickToAdvance: false,
   },
 ]
 
-function useElementRect(selector, step) {
+function useElementRect(selector, step, tick) {
   const [rect, setRect] = useState(null)
   useEffect(() => {
     if (!selector) { setRect(null); return }
@@ -102,48 +146,101 @@ function useElementRect(selector, step) {
       }
     }
     update()
-    const t = setTimeout(update, 400)
-    return () => clearTimeout(t)
-  }, [selector, step])
+    const t1 = setTimeout(update, 200)
+    const t2 = setTimeout(update, 600)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [selector, step, tick])
   return rect
 }
 
 function TutorialOverlay({ onExit }) {
   const [step, setStep] = useState(0)
+  const [tick, setTick] = useState(0)
   const current = STEPS[step]
-  const rect = useElementRect(current.selector, step)
+  const rect = useElementRect(current.selector, step, tick)
   const isLast = step === STEPS.length - 1
-  const showArrow = current.placement !== 'center' && rect
+
+  // Re-measure on scroll/resize
+  useEffect(() => {
+    const refresh = () => setTick(t => t + 1)
+    window.addEventListener('scroll', refresh, true)
+    window.addEventListener('resize', refresh)
+    return () => {
+      window.removeEventListener('scroll', refresh, true)
+      window.removeEventListener('resize', refresh)
+    }
+  }, [])
+
+  // Auto-advance when user clicks the highlighted element
+  useEffect(() => {
+    if (!current.clickToAdvance || !current.selector) return
+    const el = document.querySelector(current.selector)
+    if (!el) return
+    const handler = () => {
+      setTimeout(() => {
+        setStep(s => s + 1)
+        setTick(t => t + 1)
+      }, 180) // tiny delay so the UI updates first
+    }
+    el.addEventListener('click', handler)
+    return () => el.removeEventListener('click', handler)
+  }, [step, current, tick])
 
   const tooltipPos = () => {
     if (current.placement === 'center' || !rect) {
-      return { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10001, width: 380 }
+      return { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10002, width: 400 }
     }
-    const gap = 14
-    const left = Math.max(12, Math.min(rect.left + rect.width / 2 - 190, window.innerWidth - 392))
-    return { position: 'fixed', top: rect.top + rect.height + gap, left, zIndex: 10001, width: 380 }
+    if (current.placement === 'top') {
+      const left = Math.max(12, Math.min(rect.left + rect.width / 2 - 190, window.innerWidth - 412))
+      return { position: 'fixed', top: rect.top - 14, left, zIndex: 10002, width: 380, transform: 'translateY(-100%)' }
+    }
+    const left = Math.max(12, Math.min(rect.left + rect.width / 2 - 190, window.innerWidth - 412))
+    return { position: 'fixed', top: rect.top + rect.height + 14, left, zIndex: 10002, width: 380 }
   }
+
+  const arrowUp   = current.placement === 'bottom' && rect
+  const arrowDown = current.placement === 'top'    && rect
 
   return (
     <>
-      {/* Dimmed overlay with cutout */}
+      <style>{`
+        @keyframes tutorialPulse {
+          0%,100% { box-shadow: 0 0 0 4px rgba(254,205,40,0.25); }
+          50%      { box-shadow: 0 0 0 10px rgba(254,205,40,0.06); }
+        }
+        @keyframes tutorialBounce {
+          0%,100% { transform: translateY(0); }
+          50%      { transform: translateY(-5px); }
+        }
+        .demo-action-btn {
+          animation: tutorialBounce 1.2s ease-in-out infinite;
+          display: inline-flex; align-items: center; gap: 6px;
+          background: #FECD28; color: #111; border: none;
+          padding: 8px 16px; border-radius: 8px; font-weight: 700;
+          font-size: 13px; cursor: pointer; font-family: inherit;
+          margin-top: 10px;
+        }
+      `}</style>
+
+      {/* Overlay — cutout keeps highlighted element visible AND clickable */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none' }}>
         {rect ? (
           <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
             <defs>
-              <mask id="tutorial-cutout">
+              <mask id="demo-cutout">
                 <rect width="100%" height="100%" fill="white" />
-                <rect x={rect.left - 8} y={rect.top - 8} width={rect.width + 16} height={rect.height + 16} rx="10" fill="black" />
+                <rect x={rect.left - 8} y={rect.top - 8}
+                  width={rect.width + 16} height={rect.height + 16} rx="10" fill="black" />
               </mask>
             </defs>
-            <rect width="100%" height="100%" fill="rgba(0,0,0,0.6)" mask="url(#tutorial-cutout)" />
+            <rect width="100%" height="100%" fill="rgba(0,0,0,0.65)" mask="url(#demo-cutout)" />
           </svg>
         ) : (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} />
         )}
       </div>
 
-      {/* Highlight ring */}
+      {/* Highlight ring — pointer-events: none so clicks pass through to the real element */}
       {rect && (
         <div style={{
           position: 'fixed',
@@ -151,97 +248,95 @@ function TutorialOverlay({ onExit }) {
           width: rect.width + 16, height: rect.height + 16,
           borderRadius: 10,
           border: '2.5px solid #FECD28',
-          boxShadow: '0 0 0 4px rgba(254,205,40,0.2)',
           zIndex: 10000,
           pointerEvents: 'none',
-          animation: 'tutorialPulse 2s infinite',
+          animation: 'tutorialPulse 1.8s infinite',
         }} />
       )}
 
-      <style>{`
-        @keyframes tutorialPulse {
-          0%, 100% { box-shadow: 0 0 0 4px rgba(254,205,40,0.2); }
-          50% { box-shadow: 0 0 0 8px rgba(254,205,40,0.08); }
-        }
-      `}</style>
-
       {/* Tooltip */}
       <div style={tooltipPos()}>
-        {showArrow && (
-          <div style={{
-            width: 0, height: 0,
-            borderLeft: '10px solid transparent',
-            borderRight: '10px solid transparent',
-            borderBottom: '10px solid #1e293b',
-            marginLeft: 28,
-          }} />
+        {arrowUp && (
+          <div style={{ width: 0, height: 0, borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderBottom: '10px solid #1e293b', marginLeft: 28 }} />
         )}
         <div style={{
-          background: '#1e293b',
-          border: '1px solid #2d4060',
-          borderRadius: 14,
-          padding: '18px 20px',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
-          color: '#f0f4ff',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          background: '#1e293b', border: '1px solid #2d4060',
+          borderRadius: 14, padding: '18px 20px',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+          color: '#f0f4ff', fontFamily: 'system-ui, -apple-system, sans-serif',
           pointerEvents: 'all',
         }}>
-          {/* Progress dots + exit */}
+          {/* Progress + exit */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 260 }}>
               {STEPS.map((_, i) => (
-                <div key={i} onClick={() => setStep(i)} style={{
-                  width: i === step ? 20 : 6, height: 6, borderRadius: 3, cursor: 'pointer',
+                <div key={i} style={{
+                  width: i === step ? 18 : 6, height: 6, borderRadius: 3,
                   background: i === step ? '#FECD28' : i < step ? 'rgba(254,205,40,0.45)' : '#334468',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.2s', flexShrink: 0,
                 }} />
               ))}
             </div>
-            <button onClick={onExit} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', padding: '2px 6px' }}>
-              Exit demo ✕
+            <button onClick={onExit} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', padding: '2px 6px', whiteSpace: 'nowrap' }}>
+              Exit ✕
             </button>
           </div>
 
-          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 7, lineHeight: 1.3 }}>{current.title}</div>
-          <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.65, marginBottom: 16 }}>{current.body}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>{current.title}</div>
+          <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.65, whiteSpace: 'pre-line' }}>{current.body}</div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Action CTA — shown when user needs to click something */}
+          {current.clickToAdvance && current.action && (
+            <div>
+              <button className="demo-action-btn" onClick={() => {
+                const el = document.querySelector(current.selector)
+                if (el) el.click()
+              }}>
+                {current.action}
+              </button>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 6 }}>or click the highlighted element directly</div>
+            </div>
+          )}
+
+          {/* Nav buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
             <span style={{ fontSize: 11, color: '#64748b' }}>{step + 1} / {STEPS.length}</span>
             <div style={{ display: 'flex', gap: 8 }}>
               {step > 0 && (
-                <button onClick={() => setStep(s => s - 1)} style={{
+                <button onClick={() => { setStep(s => s - 1); setTick(t => t + 1) }} style={{
                   display: 'flex', alignItems: 'center', gap: 4,
-                  padding: '7px 14px', borderRadius: 8,
-                  border: '1px solid #334468', background: '#0f172a',
-                  color: '#f0f4ff', fontWeight: 600, fontSize: 13,
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  padding: '7px 14px', borderRadius: 8, border: '1px solid #334468',
+                  background: '#0f172a', color: '#f0f4ff', fontWeight: 600,
+                  fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   <ChevronLeft size={14} /> Back
                 </button>
               )}
-              {!isLast ? (
-                <button onClick={() => setStep(s => s + 1)} style={{
+              {!current.clickToAdvance && !isLast && (
+                <button onClick={() => { setStep(s => s + 1); setTick(t => t + 1) }} style={{
                   display: 'flex', alignItems: 'center', gap: 4,
-                  padding: '7px 18px', borderRadius: 8,
-                  border: 'none', background: '#FECD28',
-                  color: '#111', fontWeight: 700, fontSize: 13,
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  padding: '7px 18px', borderRadius: 8, border: 'none',
+                  background: '#FECD28', color: '#111', fontWeight: 700,
+                  fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   Next <ChevronRight size={14} />
                 </button>
-              ) : (
+              )}
+              {isLast && (
                 <button onClick={onExit} style={{
-                  padding: '7px 18px', borderRadius: 8,
-                  border: 'none', background: '#FECD28',
-                  color: '#111', fontWeight: 700, fontSize: 13,
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  padding: '7px 18px', borderRadius: 8, border: 'none',
+                  background: '#FECD28', color: '#111', fontWeight: 700,
+                  fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                 }}>
-                  Done ✓
+                  Finish ✓
                 </button>
               )}
             </div>
           </div>
         </div>
+        {arrowDown && (
+          <div style={{ width: 0, height: 0, borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderTop: '10px solid #1e293b', marginLeft: 28, marginTop: -1 }} />
+        )}
       </div>
     </>
   )
@@ -264,7 +359,6 @@ export default function DemoPage() {
     }
   }
 
-  /* ── LOGIN PAGE ── */
   if (!loggedIn) {
     return (
       <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4">
@@ -320,7 +414,6 @@ export default function DemoPage() {
     )
   }
 
-  /* ── REAL DASHBOARD + TUTORIAL OVERLAY ── */
   return (
     <div style={{ position: 'relative' }}>
       <AuthProvider _demoUser={DEMO_USER}>
@@ -340,7 +433,7 @@ export default function DemoPage() {
             borderRadius: 999, padding: '10px 18px',
             fontWeight: 700, fontSize: 13, cursor: 'pointer',
             fontFamily: 'system-ui, sans-serif',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
           }}
         >
           📖 Restart tour
