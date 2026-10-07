@@ -178,7 +178,7 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
 
           {/* Finance: approve */}
           {isPendingApproval && canFinance && (
-            <button onClick={handleApprove} disabled={approvingReturn}
+            <button data-demo="approve-return-btn" onClick={handleApprove} disabled={approvingReturn}
               className="px-3 py-1.5 rounded-xl text-xs font-medium bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors">
               {approvingReturn ? 'Approving…' : 'Approve Return'}
             </button>

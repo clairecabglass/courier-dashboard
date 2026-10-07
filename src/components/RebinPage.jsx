@@ -102,7 +102,7 @@ function RebinModal({ order, onClose, onConfirm }) {
 
         <div className="flex gap-2 justify-end">
           <button onClick={onClose} className="px-4 py-2 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Cancel</button>
-          <button onClick={handleConfirm} disabled={saving}
+          <button data-demo="rebin-confirm-btn" onClick={handleConfirm} disabled={saving}
             className="px-4 py-2 rounded-xl text-sm font-medium bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-700 disabled:opacity-50">
             {saving ? 'Saving…' : 'Confirm & Rebin'}
           </button>
@@ -167,6 +167,7 @@ function RebinCard({ order, onRebin }) {
 
         {!alreadyRebinned && (
           <button
+            data-demo="rebin-btn"
             onClick={() => onRebin(order)}
             className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-700 transition-colors"
           >

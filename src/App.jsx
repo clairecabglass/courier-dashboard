@@ -397,7 +397,7 @@ export function Dashboard() {
         onRefresh={handleRefresh} refreshing={refreshing}
         dark={dark} toggleDark={toggleDark} notifications={notifications} />
 
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
+      <main className="demo-content-area max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
         {loading && orders.length === 0 ? (
           <div className="flex items-center justify-center py-32 text-slate-400 dark:text-slate-500 gap-3">
             <span className="w-5 h-5 border-2 border-slate-300 border-t-brand rounded-full animate-spin" />
