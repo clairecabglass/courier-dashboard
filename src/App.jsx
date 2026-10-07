@@ -18,6 +18,7 @@ import FilterBar from './components/FilterBar'
 import OrdersTable from './components/OrdersTable'
 import OrderPanel from './components/OrderPanel'
 import LoginPage from './components/LoginPage'
+import DemoPage from './components/DemoPage'
 import { buildWHNotifications } from './utils/whNotifications'
 import AdminPage from './components/AdminPage'
 import UserGuidePage from './components/UserGuidePage'
@@ -519,6 +520,7 @@ function Dashboard() {
 
 function AppRouter() {
   const { user } = useAuth()
+  if (window.location.pathname === '/demo') return <DemoPage />
   return user ? <Dashboard /> : <LoginPage />
 }
 
