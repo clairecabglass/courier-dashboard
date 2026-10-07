@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { PackageCheck } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { PackageCheck, Camera, X } from 'lucide-react'
 import { STATUS } from '../mockData'
 
 const CONDITIONS = ['Good Condition', 'Damaged', 'Other']
@@ -15,8 +15,20 @@ const REBINNABLE = [STATUS.BOOKED, STATUS.AWAITING_RETURN, STATUS.CONDITION_CHEC
 function RebinModal({ order, onClose, onConfirm }) {
   const [condition,  setCondition]  = useState(order.returnCondition || '')
   const [note,       setNote]       = useState(order.returnNote      || '')
+  const [photos,     setPhotos]     = useState([])
   const [saving,     setSaving]     = useState(false)
   const [err,        setErr]        = useState('')
+  const fileRef = useRef(null)
+
+  const handleFiles = (e) => {
+    const files = Array.from(e.target.files)
+    files.forEach(f => {
+      const reader = new FileReader()
+      reader.onload = ev => setPhotos(p => [...p, { name: f.name, src: ev.target.result }])
+      reader.readAsDataURL(f)
+    })
+    e.target.value = ''
+  }
 
   const handleConfirm = async () => {
     if (!condition) { setErr('Select a condition'); return }
@@ -60,6 +72,31 @@ function RebinModal({ order, onClose, onConfirm }) {
           value={note}
           onChange={e => { setNote(e.target.value); setErr('') }}
         />
+
+        {/* Photo upload — optional */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Photos <span className="normal-case font-normal">(optional)</span></p>
+            <button type="button" onClick={() => fileRef.current?.click()}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-400 transition-colors">
+              <Camera size={12} /> Add photo
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
+          </div>
+          {photos.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {photos.map((p, i) => (
+                <div key={i} className="relative group">
+                  <img src={p.src} alt={p.name} className="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-600" />
+                  <button onClick={() => setPhotos(ps => ps.filter((_, j) => j !== i))}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X size={9} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
 {err && <p className="text-sm text-red-500 mb-3">{err}</p>}
 

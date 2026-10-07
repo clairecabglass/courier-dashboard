@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { STATUS } from '../mockData'
-import { apiUpdateReturnCondition, apiApproveReturn, apiUpdateCreditNo, apiCompleteReturn } from '../api'
+import { apiUpdateReturnCondition, apiApproveReturn, apiUpdateCreditNo, apiCompleteReturn, apiCancelReturn } from '../api'
 import { useAuth } from '../context/AuthContext'
 
 const CONDITIONS = ['Good Condition', 'Damaged', 'Other']
@@ -85,11 +85,15 @@ function ConditionModal({ order, onClose, onConfirm }) {
   )
 }
 
-function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onCondition, onApprove, onComplete, onRefresh, onCreditNo }) {
+const CANCELLABLE = [STATUS.PENDING_FINANCE_APPROVAL, STATUS.READY_FOR_QUOTE, STATUS.QUOTED, STATUS.AWAITING_RETURN, STATUS.ERROR]
+
+function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onCondition, onApprove, onComplete, onCancel, onRefresh, onCreditNo }) {
   const [creditNo, setCreditNo] = useState(order.creditNo || '')
   const [savingCredit, setSavingCredit] = useState(false)
   const [approvingReturn, setApprovingReturn] = useState(false)
   const [completing, setCompleting] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
 
   const handleSaveCredit = async () => {
     setSavingCredit(true)
@@ -110,6 +114,12 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
     setCompleting(true)
     try { await onComplete(order.psNo); onRefresh() }
     finally { setCompleting(false) }
+  }
+
+  const handleCancel = async () => {
+    setCancelling(true)
+    try { await onCancel(order.psNo); onRefresh() }
+    finally { setCancelling(false); setConfirmCancel(false) }
   }
 
   const isPendingApproval = order.status === STATUS.PENDING_FINANCE_APPROVAL
@@ -188,6 +198,26 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
               className="px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors">
               {completing ? 'Moving…' : 'Move to History'}
             </button>
+          )}
+
+          {/* Cancel return — only before label is bought */}
+          {canFinance && CANCELLABLE.includes(order.status) && (
+            confirmCancel
+              ? <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Sure?</span>
+                  <button onClick={handleCancel} disabled={cancelling}
+                    className="px-2.5 py-1 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors">
+                    {cancelling ? '…' : 'Yes, cancel'}
+                  </button>
+                  <button onClick={() => setConfirmCancel(false)}
+                    className="px-2.5 py-1 rounded-lg text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    No
+                  </button>
+                </div>
+              : <button onClick={() => setConfirmCancel(true)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                  Cancel Return
+                </button>
           )}
         </div>
       </div>
@@ -271,6 +301,12 @@ export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect, sa
     onRefresh()
   }
 
+  const handleCancel = async (psNo) => {
+    if (sandboxHandlers) { sandboxHandlers.onCancel(psNo); return }
+    await apiCancelReturn(psNo)
+    onRefresh()
+  }
+
   if (returnOrders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 gap-2">
@@ -301,6 +337,7 @@ export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect, sa
           onCondition={setConditionOrder}
           onApprove={handleApprove}
           onComplete={handleComplete}
+          onCancel={handleCancel}
           onRefresh={onRefresh}
           onCreditNo={sandboxHandlers?.onCreditNo}
         />

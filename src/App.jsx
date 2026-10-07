@@ -5,7 +5,7 @@ import { ActivityProvider, useActivity } from './context/ActivityContext'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useNotifications } from './hooks/useNotifications'
 import { useTestOrders } from './hooks/useTestOrders'
-import { LIVE, fetchOrders, fetchWHData, updateOrder as apiUpdate, deleteOrder as apiDelete, archiveBooked, archiveOrders as apiArchiveOrders, restoreOrders, saveNote as apiSaveNote, setPacked as apiSetPacked, setStaged as apiSetStaged, setBackOrder as apiSetBackOrder } from './api'
+import { LIVE, fetchOrders, fetchWHData, updateOrder as apiUpdate, deleteOrder as apiDelete, archiveBooked, archiveOrders as apiArchiveOrders, restoreOrders, saveNote as apiSaveNote, setPacked as apiSetPacked, setStaged as apiSetStaged, setBackOrder as apiSetBackOrder, apiUpdateReturnCondition } from './api'
 import ReturnsTab from './components/ReturnsTab'
 import ReturnModal from './components/ReturnModal'
 import RebinPage from './components/RebinPage'
@@ -429,6 +429,7 @@ function Dashboard() {
                   onCondition:(psNo, condition, note) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.conditionTestReturn(o.id, condition, note) },
                   onCreditNo: (psNo, creditNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.creditNoTestReturn(o.id, creditNo) },
                   onComplete: (psNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.completeTestReturn(o.id) },
+                  onCancel:   (psNo) => { const o = allOrders.find(x => x.psNo === psNo); if (o) test.cancelTestReturn(o.id) },
                 } : null}
               />
             )}
@@ -437,7 +438,7 @@ function Dashboard() {
                 orders={allOrders}
                 onRebin={isSandbox
                   ? (id, condition, note) => Promise.resolve(test.rebinTestOrder(id, condition, note))
-                  : null}
+                  : (psNo, condition, note) => apiUpdateReturnCondition(psNo, condition, note).then(() => loadOrders())}
               />
             )}
 

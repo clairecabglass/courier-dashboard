@@ -183,6 +183,11 @@ export function useTestOrders(enabled) {
     persist(to.filter(o => o.id !== id), [{ ...hit, archivedAt: new Date().toISOString() }, ...th])
   }, [persist])
 
+  const cancelTestReturn = useCallback((id) => {
+    const to = load(STORAGE_KEY)
+    persist(to.filter(o => o.id !== id), load(HISTORY_KEY))
+  }, [persist])
+
   return {
     testOrders:        testOrders,
     testHistory:       testHistory,
@@ -198,6 +203,7 @@ export function useTestOrders(enabled) {
     rebinTestOrder,
     creditNoTestReturn,
     completeTestReturn,
+    cancelTestReturn,
     isTestId: (id) => typeof id === 'string' && id.startsWith('test-'),
   }
 }

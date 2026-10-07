@@ -66,6 +66,7 @@ export const apiUpdateReturnCondition = (psNo, condition, note) => post('updateR
 export const apiApproveReturn         = (psNo)               => post('approveReturn', { psNo })
 export const apiUpdateCreditNo        = (psNo, creditNo)     => post('updateCreditNo', { psNo, creditNo })
 export const apiCompleteReturn        = (psNo)               => post('completeReturn', { psNo })
+export const apiCancelReturn          = (psNo)               => post('cancelReturn',  { psNo })
 
 // WH Uploads
 export async function fetchWHData() {
