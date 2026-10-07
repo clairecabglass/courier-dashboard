@@ -133,12 +133,12 @@ export function Dashboard() {
   }, [])
 
   // Sandbox: only fake data. Claire: mixed. Everyone else: real only.
-  const allOrders  = isSandbox ? test.testOrders  : (isClaire ? [...test.testOrders,  ...orders]  : orders)
-  const allHistory = isSandbox ? test.testHistory : (isClaire ? [...test.testHistory, ...history] : history)
+  const allOrders  = (isSandbox || isDemo) ? test.testOrders  : (isClaire ? [...test.testOrders,  ...orders]  : orders)
+  const allHistory = (isSandbox || isDemo) ? test.testHistory : (isClaire ? [...test.testHistory, ...history] : history)
 
   // For sandbox, packed/staged state lives on the order object (not in the Sets which are server-sourced).
-  const effectivePackedIds  = useMemo(() => isSandbox ? new Set(allOrders.filter(o => o.packed).map(o => o.id))  : packedIds,  [isSandbox, allOrders, packedIds])
-  const effectiveStagedIds  = useMemo(() => isSandbox ? new Set(allOrders.filter(o => o.staged).map(o => o.id))  : stagedIds,  [isSandbox, allOrders, stagedIds])
+  const effectivePackedIds  = useMemo(() => (isSandbox || isDemo) ? new Set(allOrders.filter(o => o.packed).map(o => o.id))  : packedIds,  [isSandbox, isDemo, allOrders, packedIds])
+  const effectiveStagedIds  = useMemo(() => (isSandbox || isDemo) ? new Set(allOrders.filter(o => o.staged).map(o => o.id))  : stagedIds,  [isSandbox, isDemo, allOrders, stagedIds])
 
   const source = activeTab === 'history' ? allHistory : allOrders
 
