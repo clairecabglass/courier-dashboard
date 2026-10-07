@@ -66,6 +66,53 @@ function StatusDropdown({ value, onChange, orders }) {
   )
 }
 
+const COURIER_OPTIONS = [
+  { key: 'all', label: 'All couriers' },
+  { key: 'TCG',      label: 'TCG' },
+  { key: 'EPX',      label: 'EPX' },
+  { key: 'Triangle', label: 'Triangle' },
+]
+
+function CourierDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const label = COURIER_OPTIONS.find(o => o.key === value)?.label || 'All couriers'
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen(v => !v)}
+        className={`flex items-center gap-2 pl-3 pr-2.5 py-2 text-sm rounded-xl border shadow-sm bg-white dark:bg-slate-800 transition-all
+          ${open ? 'border-brand ring-2 ring-brand/30' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}>
+        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
+        <ChevronDown size={14} className={`text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1.5 w-36 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg z-20 overflow-hidden py-1">
+          {COURIER_OPTIONS.map(({ key, label }) => {
+            const active = value === key
+            return (
+              <button key={key} onClick={() => { onChange(key); setOpen(false) }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors
+                  ${active ? 'bg-brand/10 dark:bg-brand/20 text-[#111111] dark:text-brand font-semibold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? 'bg-brand' : 'bg-transparent'}`} />
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function FilterBar({ orders, activeFilter, setActiveFilter, courierFilter, setCourierFilter, search, setSearch, dateFrom, setDateFrom, dateTo, setDateTo }) {
   const hasFilters = activeFilter !== 'all' || courierFilter !== 'all' || search || dateFrom || dateTo
 
@@ -96,13 +143,7 @@ export default function FilterBar({ orders, activeFilter, setActiveFilter, couri
         Today
       </button>
 
-      <select value={courierFilter} onChange={e => setCourierFilter(e.target.value)}
-        className="text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand cursor-pointer">
-        <option value="all">All couriers</option>
-        <option value="TCG">TCG</option>
-        <option value="EPX">EPX</option>
-        <option value="Triangle">Triangle</option>
-      </select>
+      <CourierDropdown value={courierFilter} onChange={setCourierFilter} />
 
       <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm px-3 py-1.5">
         <Calendar size={14} className="text-slate-400 shrink-0" />
