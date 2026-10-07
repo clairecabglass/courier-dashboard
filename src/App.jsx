@@ -33,16 +33,17 @@ export function Dashboard() {
   const { addLog } = useActivity()
   const isClaire = user?.name === 'Claire'
   const isSandbox = user?.role === 'sandbox'
+  const isDemo = user?.id === 999
   const test = useTestOrders(isClaire || isSandbox)
   const [dark, toggleDark] = useDarkMode()
   const [archiving, setArchiving] = useState(false)
-  const cachedData = LIVE ? (() => { try { const c = localStorage.getItem('cabglass_orders_cache'); return c ? JSON.parse(c) : null } catch (_) { return null } })() : null
-  const [orders, setOrders] = useState(LIVE ? (cachedData?.orders || []) : mockOrders)
-  const [history, setHistory] = useState(LIVE ? (cachedData?.history || []) : mockHistory)
+  const cachedData = (LIVE && !isDemo) ? (() => { try { const c = localStorage.getItem('cabglass_orders_cache'); return c ? JSON.parse(c) : null } catch (_) { return null } })() : null
+  const [orders, setOrders] = useState((LIVE && !isDemo) ? (cachedData?.orders || []) : mockOrders)
+  const [history, setHistory] = useState((LIVE && !isDemo) ? (cachedData?.history || []) : mockHistory)
   const [packedIds, setPackedIds] = useState(() => new Set())
   const [stagedIds, setStagedIds] = useState(() => new Set())
   const [backOrderIds, setBackOrderIds] = useState(() => new Set())
-  const [loading, setLoading] = useState(LIVE && !cachedData && !isSandbox)
+  const [loading, setLoading] = useState(LIVE && !isDemo && !cachedData && !isSandbox)
   const [selectedId, setSelectedId] = useState(null)
   const [activeTab, setActiveTab] = useState(landingTab(user))
   const [activeFilter, setActiveFilter] = useState('all')
@@ -99,7 +100,7 @@ export function Dashboard() {
 
   // Load live data from the sheet (when configured)
   const loadOrders = async (opts = {}) => {
-    if (!LIVE || isSandbox) { setLoading(false); return }
+    if (!LIVE || isSandbox || isDemo) { setLoading(false); return }
     try {
       const { orders, history } = await fetchOrders()
       applyLoaded(orders, history, opts)
