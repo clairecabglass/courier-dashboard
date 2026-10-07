@@ -1,6 +1,7 @@
 import { ExternalLink, AlertTriangle, ChevronRight } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import Toggle from './Toggle'
+import CustomSelect from './CustomSelect'
 import { STATUS } from '../mockData'
 import { useAuth } from '../context/AuthContext'
 import { getOrderIssues } from '../validation'
@@ -70,17 +71,17 @@ export default function OrderCard({ order, selected, onSelect, onUpdate }) {
             {order.selectedCourier || '—'}
           </span>
         ) : (
-          <select value={order.selectedCourier}
-            onChange={e => onUpdate(order.id, { selectedCourier: e.target.value })}
-            disabled={terminal}
-            className={`text-xs font-medium border rounded-lg px-2 py-1 focus:outline-none
-              ${order.selectedCourier ? COURIER_COLORS[order.selectedCourier] || 'bg-white border-slate-200 text-slate-700' : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400'}
-              ${terminal ? 'opacity-50 cursor-not-allowed' : ''}`}>
-            <option value="">Courier…</option>
-            <option value="TCG">TCG</option>
-            <option value="EPX">EPX</option>
-            <option value="Triangle">Triangle</option>
-          </select>
+          <CustomSelect
+            size="sm"
+            value={order.selectedCourier || ''}
+            placeholder="Courier…"
+            options={[
+              { value: 'TCG',      label: 'TCG' },
+              { value: 'EPX',      label: 'EPX' },
+              { value: 'Triangle', label: 'Triangle' },
+            ]}
+            onChange={v => onUpdate(order.id, { selectedCourier: v })}
+            disabled={terminal} />
         )}
 
         <div className="flex items-center gap-3">

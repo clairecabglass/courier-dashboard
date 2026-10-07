@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { X, ExternalLink, Phone, Mail, MapPin, Package, RefreshCw, AlertTriangle, Pencil, Plus, Trash2, Check, Archive, ArrowLeft, Copy, PackageSearch, Clock } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import Toggle from './Toggle'
+import CustomSelect from './CustomSelect'
 import { STATUS } from '../mockData'
 import { useAuth } from '../context/AuthContext'
 import { getOrderIssues } from '../validation'
@@ -159,27 +160,27 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                   <p className="text-xs font-semibold text-violet-700 dark:text-violet-300">🧪 Sandbox order — no real API calls</p>
                   <div className="flex items-center gap-2">
                     <label className="text-xs text-violet-600 dark:text-violet-400 shrink-0">Jump to stage:</label>
-                    <select
+                    <CustomSelect
+                      size="sm"
                       value=""
-                      onChange={e => {
-                        const s = e.target.value
+                      placeholder="Select stage…"
+                      options={[
+                        { value: STATUS.READY_FOR_QUOTE,          label: 'Ready For Quote' },
+                        { value: STATUS.QUOTED,                   label: 'Quoted' },
+                        { value: STATUS.BOOKED,                   label: 'Booked' },
+                        { value: STATUS.PENDING_FINANCE_APPROVAL, label: 'Pending Finance Approval' },
+                        { value: STATUS.AWAITING_RETURN,          label: 'Awaiting Return' },
+                        { value: STATUS.CONDITION_CHECKED,        label: 'Condition Checked' },
+                      ]}
+                      onChange={s => {
                         if (!s) return
                         const extra = {}
-                        if (s === STATUS.QUOTED)  { extra.tcgQuote = order.tcgQuote || '150.00'; extra.selectedCourier = order.selectedCourier || 'TCG' }
-                        if (s === STATUS.BOOKED)  { extra.tcgQuote = order.tcgQuote || '150.00'; extra.selectedCourier = order.selectedCourier || 'TCG'; extra.approved = true; extra.buyLabel = true; extra.waybillNo = order.waybillNo || `FAKE-${Math.random().toString(36).slice(2,8).toUpperCase()}` }
+                        if (s === STATUS.QUOTED) { extra.tcgQuote = order.tcgQuote || '150.00'; extra.selectedCourier = order.selectedCourier || 'TCG' }
+                        if (s === STATUS.BOOKED) { extra.tcgQuote = order.tcgQuote || '150.00'; extra.selectedCourier = order.selectedCourier || 'TCG'; extra.approved = true; extra.buyLabel = true; extra.waybillNo = order.waybillNo || `FAKE-${Math.random().toString(36).slice(2,8).toUpperCase()}` }
                         if (s === STATUS.READY_FOR_QUOTE) { extra.approved = false; extra.buyLabel = false }
                         onUpdate({ status: s, ...extra })
-                        e.target.value = ''
                       }}
-                      className="flex-1 text-xs px-2 py-1.5 border border-violet-300 dark:border-violet-600 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-violet-400">
-                      <option value="">Select stage…</option>
-                      <option value={STATUS.READY_FOR_QUOTE}>Ready For Quote</option>
-                      <option value={STATUS.QUOTED}>Quoted</option>
-                      <option value={STATUS.BOOKED}>Booked</option>
-                      <option value={STATUS.PENDING_FINANCE_APPROVAL}>Pending Finance Approval</option>
-                      <option value={STATUS.AWAITING_RETURN}>Awaiting Return</option>
-                      <option value={STATUS.CONDITION_CHECKED}>Condition Checked</option>
-                    </select>
+                      className="flex-1" />
                   </div>
                 </div>
               )}
@@ -423,16 +424,17 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                         <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Selected Courier</p>
                         <p className="text-xs text-slate-400 mt-0.5">Which courier to book with</p>
                       </div>
-                      <select value={order.selectedCourier} onChange={e => onUpdate({ selectedCourier: e.target.value })} disabled={terminal}
-                        className={`text-sm font-semibold border rounded-lg px-3 py-1.5 focus:outline-none dark:bg-slate-800 dark:text-slate-100
-                          ${order.selectedCourier ? COURIER_COLORS[order.selectedCourier] || 'border-slate-200' : 'border-slate-200 dark:border-slate-600 text-slate-400'}
-                          ${terminal ? 'cursor-not-allowed' : ''}`}>
-                        <option value="">Select courier…</option>
-                        <option value="TCG">TCG</option>
-                        <option value="EPX">EPX</option>
-                        <option value="Triangle">Triangle</option>
-                        <option value="Other">Other</option>
-                      </select>
+                      <CustomSelect
+                        value={order.selectedCourier || ''}
+                        placeholder="Select courier…"
+                        options={[
+                          { value: 'TCG',      label: 'TCG' },
+                          { value: 'EPX',      label: 'EPX' },
+                          { value: 'Triangle', label: 'Triangle' },
+                          { value: 'Other',    label: 'Other' },
+                        ]}
+                        onChange={v => onUpdate({ selectedCourier: v })}
+                        disabled={terminal} />
                     </div>
                     <hr className="border-slate-100 dark:border-slate-700" />
                     {/* Returns skip the Picked requirement but need Finance approval first */}

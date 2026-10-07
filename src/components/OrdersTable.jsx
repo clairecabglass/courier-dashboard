@@ -3,6 +3,7 @@ import { ExternalLink, AlertTriangle, ChevronRight, StickyNote, X, Archive, Tras
 import StatusBadge from './StatusBadge'
 import Toggle from './Toggle'
 import OrderCard from './OrderCard'
+import CustomSelect from './CustomSelect'
 import { STATUS } from '../mockData'
 import { useAuth } from '../context/AuthContext'
 import { getOrderIssues } from '../validation'
@@ -192,23 +193,18 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
                         {order.selectedCourier || '—'}
                       </span>
                     ) : (
-                      <div className="relative inline-block">
-                        <select value={order.selectedCourier}
-                          onChange={e => onUpdate(order.id, { selectedCourier: e.target.value })}
-                          disabled={terminal}
-                          className={`appearance-none text-xs font-medium border rounded-lg pl-2 pr-6 py-1 focus:outline-none transition-colors
-                            ${order.selectedCourier ? COURIER_COLORS[order.selectedCourier] || 'bg-white border-slate-200 text-slate-700 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300' : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-400'}
-                            ${terminal ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                          <option value="">Select…</option>
-                          <option value="TCG">TCG</option>
-                          <option value="EPX">EPX</option>
-                          <option value="Triangle">Triangle</option>
-                          <option value="Other">Other</option>
-                        </select>
-                        <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 opacity-50">
-                          <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
-                        </span>
-                      </div>
+                      <CustomSelect
+                        size="sm"
+                        value={order.selectedCourier || ''}
+                        placeholder="Select…"
+                        options={[
+                          { value: 'TCG',      label: 'TCG' },
+                          { value: 'EPX',      label: 'EPX' },
+                          { value: 'Triangle', label: 'Triangle' },
+                          { value: 'Other',    label: 'Other' },
+                        ]}
+                        onChange={v => onUpdate(order.id, { selectedCourier: v })}
+                        disabled={terminal} />
                     )}
                   </td>
 
