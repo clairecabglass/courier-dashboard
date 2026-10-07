@@ -156,25 +156,37 @@ function TutorialOverlay({ onExit }) {
     return () => { window.removeEventListener('scroll', fn, true); window.removeEventListener('resize', fn) }
   }, [])
 
-  // Auto-advance when user clicks the target element
+  // Auto-advance when user clicks the target element — use document delegation
+  // so dropdown items that don't exist yet are still captured
   useEffect(() => {
     if (!cur.clickToAdvance || !cur.selector) return
-    const advance = () => setTimeout(() => { setStep(s => s + 1); setTick(t => t + 1) }, 220)
-    const el = document.querySelector(cur.selector)
-    if (!el) return
-    el.addEventListener('click', advance)
-    return () => el.removeEventListener('click', advance)
-  }, [step, tick, cur])
+    let fired = false
+    const advance = (e) => {
+      if (fired) return
+      if (e.target.closest(cur.selector)) {
+        fired = true
+        setTimeout(() => { setStep(s => s + 1); setTick(t => t + 1) }, 220)
+      }
+    }
+    document.addEventListener('click', advance, true)
+    return () => document.removeEventListener('click', advance, true)
+  }, [step, cur.clickToAdvance, cur.selector])
 
   // nextOnAny: advance when user clicks inside a region
   useEffect(() => {
     if (!cur.nextOnAny) return
-    const container = document.querySelector(cur.nextOnAny)
-    if (!container) return
-    const advance = () => setTimeout(() => { setStep(s => s + 1); setTick(t => t + 1) }, 220)
-    container.addEventListener('click', advance)
-    return () => container.removeEventListener('click', advance)
-  }, [step, tick, cur])
+    let fired = false
+    const advance = (e) => {
+      if (fired) return
+      const container = document.querySelector(cur.nextOnAny)
+      if (container && container.contains(e.target)) {
+        fired = true
+        setTimeout(() => { setStep(s => s + 1); setTick(t => t + 1) }, 220)
+      }
+    }
+    document.addEventListener('click', advance, true)
+    return () => document.removeEventListener('click', advance, true)
+  }, [step, cur.nextOnAny])
 
   /* Decide which rects to cut out of the overlay */
   const cutouts = []
@@ -294,7 +306,12 @@ function TutorialOverlay({ onExit }) {
             <div>
               <button className="demo-cta" onClick={() => {
                 const el = document.querySelector(cur.selector)
-                if (el) el.click()
+                if (el) {
+                  el.click()
+                } else {
+                  // element not in DOM yet (dropdown closed) — just advance
+                  setStep(s => s + 1); setTick(t => t + 1)
+                }
               }}>{cur.action}</button>
               <div style={{ fontSize:11, color:'#475569', marginTop:5 }}>or click the highlighted element directly</div>
             </div>
