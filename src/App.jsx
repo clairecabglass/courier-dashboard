@@ -408,7 +408,6 @@ export function Dashboard() {
           <>
             {activeTab === 'upload'   && <UploadTab onUploaded={loadOrders} />}
             {activeTab === 'wh'       && <WHUploadsPage whData={whData} onRefresh={loadWHData} />}
-            {activeTab === 'rebin'    && <RebinPage />}
             {activeTab === 'pricing'  && <GlassPricingPage />}
             {activeTab === 'userguide' && <UserGuidePage />}
             {activeTab === 'staged' && (
