@@ -85,9 +85,10 @@ function ConditionModal({ order, onClose, onConfirm }) {
   )
 }
 
-const CANCELLABLE = [STATUS.PENDING_FINANCE_APPROVAL, STATUS.READY_FOR_QUOTE, STATUS.QUOTED, STATUS.AWAITING_RETURN, STATUS.ERROR]
+// Non-admin can cancel only if CabGlass is doing the shipping AND we haven't booked yet
+const PRE_BOOKING = [STATUS.PENDING_FINANCE_APPROVAL, STATUS.READY_FOR_QUOTE, STATUS.QUOTED, STATUS.ERROR]
 
-function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onCondition, onApprove, onComplete, onCancel, onRefresh, onCreditNo }) {
+function ReturnCard({ order, canEdit, canFinance, isAdmin, selected, onSelect, onCondition, onApprove, onComplete, onCancel, onRefresh, onCreditNo }) {
   const [creditNo, setCreditNo] = useState(order.creditNo || '')
   const [savingCredit, setSavingCredit] = useState(false)
   const [approvingReturn, setApprovingReturn] = useState(false)
@@ -122,9 +123,17 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
     finally { setCancelling(false); setConfirmCancel(false) }
   }
 
-  const isPendingApproval = order.status === STATUS.PENDING_FINANCE_APPROVAL
+  const isPendingApproval  = order.status === STATUS.PENDING_FINANCE_APPROVAL
   const isConditionChecked = order.status === STATUS.CONDITION_CHECKED
   const canRecordCondition = canEdit && (order.status === STATUS.BOOKED || order.status === STATUS.AWAITING_RETURN)
+
+  // Cancel rules:
+  // Non-admin: only when CabGlass ships AND not yet booked
+  // Admin: any status (gives them an escape hatch at any stage)
+  const nonAdminCanCancel = canEdit && !order.buyerArranges && PRE_BOOKING.includes(order.status)
+  const showCancel        = isAdmin || nonAdminCanCancel
+  // Late-stage cancels (booked / condition checked / etc.) are admin-only — flag for scary label
+  const isLatestageCancel = isAdmin && !nonAdminCanCancel
 
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-2xl border shadow-sm p-4 ${
@@ -200,8 +209,8 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
             </button>
           )}
 
-          {/* Cancel return — only before label is bought */}
-          {canFinance && CANCELLABLE.includes(order.status) && (
+          {/* Cancel return */}
+          {showCancel && (
             confirmCancel
               ? <div className="flex items-center gap-1.5">
                   <span className="text-xs text-slate-500 dark:text-slate-400">Sure?</span>
@@ -215,8 +224,12 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
                   </button>
                 </div>
               : <button onClick={() => setConfirmCancel(true)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                  Cancel Return
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors ${
+                    isLatestageCancel
+                      ? 'border-red-500 dark:border-red-600 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100'
+                      : 'border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                  }`}>
+                  {isLatestageCancel ? '⚠ Void Return (Admin)' : 'Cancel Return'}
                 </button>
           )}
         </div>
@@ -272,8 +285,9 @@ function ReturnCard({ order, canEdit, canFinance, selected, onSelect, onConditio
 
 export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect, sandboxHandlers }) {
   const { perm, user } = useAuth()
-  const canEdit = perm('returns', 'edit')
-  const canFinance = user?.role === 'finance' || user?.role === 'admin' || user?.role === 'sandbox'
+  const canEdit    = perm('returns', 'edit')
+  const isAdmin    = user?.role === 'admin' || user?.id === 999
+  const canFinance = user?.role === 'finance' || isAdmin || user?.role === 'sandbox'
   const [conditionOrder, setConditionOrder] = useState(null)
 
   const returnOrders = (orders ?? [])
@@ -332,6 +346,7 @@ export default function ReturnsTab({ orders, onRefresh, selectedId, onSelect, sa
           order={order}
           canEdit={canEdit}
           canFinance={canFinance}
+          isAdmin={isAdmin}
           selected={selectedId === order.id}
           onSelect={() => onSelect(order.id)}
           onCondition={setConditionOrder}
