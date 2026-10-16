@@ -10,7 +10,7 @@ import ReturnsTab from './components/ReturnsTab'
 import ReturnModal from './components/ReturnModal'
 import RebinPage from './components/RebinPage'
 import { Archive } from 'lucide-react'
-import { playPing } from './ping'
+import { playPing, playLoudPing } from './ping'
 import Toasts from './components/Toasts'
 import Header from './components/Header'
 import StatsBar from './components/StatsBar'
@@ -64,7 +64,10 @@ export function Dashboard() {
   const removeToast = (id) => setToasts(t => t.filter(x => x.id !== id))
 
   // Track known PS numbers so we can detect new arrivals and ping
-  const knownPs = useRef(null)
+  const knownPs       = useRef(null)
+  const knownPickable = useRef(null) // booked orders ready for picking
+  const knownRebin    = useRef(null) // returns ready to be rebinned
+  const loudSounds    = perm('loudSounds', 'view')
 
   // De-duplicate by PS number (defends against duplicate sheet rows so the UI
   // doesn't flicker from duplicate React keys). Keeps the first occurrence.
@@ -96,6 +99,31 @@ export function Dashboard() {
       }
     }
     knownPs.current = currentPs
+
+    // Loud warehouse pings for dispatch tablets
+    if (ping && loudSounds) {
+      // New orders that have arrived → need picking
+      const pickable = new Set(orders.filter(o => !o.isReturn).map(o => o.psNo))
+      if (knownPickable.current) {
+        const newPick = [...pickable].filter(ps => !knownPickable.current.has(ps))
+        if (newPick.length > 0) {
+          playLoudPing()
+          notify(`${newPick.length} new order${newPick.length !== 1 ? 's' : ''} to pick: ${newPick.join(', ')}`, 'info')
+        }
+      }
+      knownPickable.current = pickable
+
+      // Returns that are Awaiting Return → ready to rebin when stock arrives
+      const rebinReady = new Set(orders.filter(o => o.isReturn && o.status === 'Awaiting Return').map(o => o.psNo))
+      if (knownRebin.current) {
+        const newRebin = [...rebinReady].filter(ps => !knownRebin.current.has(ps))
+        if (newRebin.length > 0) {
+          playLoudPing()
+          notify(`${newRebin.length} return${newRebin.length !== 1 ? 's' : ''} booked — watch for incoming stock: ${newRebin.join(', ')}`, 'info')
+        }
+      }
+      knownRebin.current = rebinReady
+    }
   }
 
   // Load live data from the sheet (when configured)

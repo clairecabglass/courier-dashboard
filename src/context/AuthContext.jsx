@@ -49,7 +49,7 @@ export function defaultPermsForRole(role) {
     case 'sales':
       return { orders: P(1,0), upload: P(1,0), staged: P(1,0), dispatch: P(1,0), wh: P(1,0), rebin: P(0,0), pricing: P(1,0), returns: P(0,0), admin: P(0,0), loudSounds: P(0,0) }
     case 'dispatch':
-      return { orders: P(0,0), upload: P(0,0), staged: P(1,1), dispatch: P(1,1), wh: P(0,0), rebin: P(0,0), pricing: P(0,0), returns: P(0,0), admin: P(0,0), loudSounds: P(0,0) }
+      return { orders: P(0,0), upload: P(0,0), staged: P(1,1), dispatch: P(1,1), wh: P(0,0), rebin: P(1,1), pricing: P(0,0), returns: P(0,0), admin: P(0,0), loudSounds: P(1,0) }
     case 'sandbox':
       return { orders: P(1,1), upload: P(0,0), staged: P(1,1), dispatch: P(1,1), wh: P(0,0), rebin: P(1,1), pricing: P(0,0), returns: P(1,1), admin: P(0,0), loudSounds: P(0,0) }
     default:
