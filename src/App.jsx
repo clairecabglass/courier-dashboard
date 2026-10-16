@@ -485,6 +485,13 @@ export function Dashboard() {
                 {activeTab === 'orders' && <StatsBar orders={isSandbox ? allOrders : allOrders.filter(o => !o.isTest)} />}
                 {activeTab === 'orders' && perm('orders', 'edit') && (
                   <div className="flex justify-end items-center gap-2 mb-3">
+                    {isClaire && (
+                      <button onClick={playLoudPing}
+                        title="Test warehouse notification sound"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 shadow-sm hover:border-amber-400 transition-colors">
+                        🔔 Test sound
+                      </button>
+                    )}
                     {(isClaire || isSandbox) && (
                       <>
                         <button onClick={test.createTestOrder}
