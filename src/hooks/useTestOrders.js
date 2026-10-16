@@ -204,6 +204,7 @@ export function useTestOrders(enabled) {
     creditNoTestReturn,
     completeTestReturn,
     cancelTestReturn,
+    clearTestOrders: () => persist([], testHistory),
     isTestId: (id) => typeof id === 'string' && id.startsWith('test-'),
   }
 }

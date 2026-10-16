@@ -459,11 +459,20 @@ export function Dashboard() {
                 {activeTab === 'orders' && perm('orders', 'edit') && (
                   <div className="flex justify-end items-center gap-2 mb-3">
                     {(isClaire || isSandbox) && (
-                      <button onClick={test.createTestOrder}
-                        title="Create a fake order for testing"
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 shadow-sm hover:border-violet-400 transition-colors">
-                        🧪 New test order
-                      </button>
+                      <>
+                        <button onClick={test.createTestOrder}
+                          title="Create a fake order for testing"
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 shadow-sm hover:border-violet-400 transition-colors">
+                          🧪 New test order
+                        </button>
+                        {test.testOrders.length > 0 && (
+                          <button onClick={test.clearTestOrders}
+                            title="Remove all test orders"
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 shadow-sm hover:border-red-400 transition-colors">
+                            🗑 Clear test orders
+                          </button>
+                        )}
+                      </>
                     )}
                     {!isSandbox && (
                       <button onClick={handleArchive} disabled={archiving}
