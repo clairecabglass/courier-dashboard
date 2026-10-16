@@ -113,16 +113,6 @@ export function Dashboard() {
       }
       knownPickable.current = pickable
 
-      // Returns that are Awaiting Return → ready to rebin when stock arrives
-      const rebinReady = new Set(orders.filter(o => o.isReturn && o.status === 'Awaiting Return').map(o => o.psNo))
-      if (knownRebin.current) {
-        const newRebin = [...rebinReady].filter(ps => !knownRebin.current.has(ps))
-        if (newRebin.length > 0) {
-          playLoudPing()
-          notify(`${newRebin.length} return${newRebin.length !== 1 ? 's' : ''} booked — watch for incoming stock: ${newRebin.join(', ')}`, 'info')
-        }
-      }
-      knownRebin.current = rebinReady
     }
   }
 
