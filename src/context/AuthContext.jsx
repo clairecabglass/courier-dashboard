@@ -58,9 +58,13 @@ export function defaultPermsForRole(role) {
 }
 
 // Resolve a user's effective permissions (explicit matrix, else derived from role).
+// Merge with role defaults so newly-added permission keys are never missing.
 export function permissionsFor(u) {
-  if (u?.permissions && typeof u.permissions === 'object') return u.permissions
-  return defaultPermsForRole(u?.role)
+  const defaults = defaultPermsForRole(u?.role)
+  if (u?.permissions && typeof u.permissions === 'object') {
+    return { ...defaults, ...u.permissions }
+  }
+  return defaults
 }
 
 // First page (in PAGES order) the user can view — used as their landing tab.
