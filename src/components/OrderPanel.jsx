@@ -46,6 +46,7 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
   const [noteDraft, setNoteDraft] = useState('')
   const [noteDirty, setNoteDirty] = useState(false)
   const [waybillCopied, setWaybillCopied] = useState(false)
+  const [addrVerified, setAddrVerified] = useState(false)
 
   const copyWaybill = useCallback(() => {
     if (!order?.waybillNo) return
@@ -58,6 +59,7 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
   useEffect(() => {
     setEditing(false); setConfirmDelete(false)
     setNoteDraft(order?.note || ''); setNoteDirty(false)
+    setAddrVerified(false)
   }, [order?.id])
 
   const startEdit = () => {
@@ -470,13 +472,51 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                               </div>
                             </div>
                           ) : (
-                            <div className={`flex items-center justify-between ${(needsPick || pendingApproval) && !terminal ? 'opacity-40 pointer-events-none select-none' : ''}`}>
-                              <div>
-                                <p className={`text-sm font-medium ${(!order.approved || needsPick || pendingApproval) ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>Buy Label</p>
-                                <p className="text-xs text-slate-400 mt-0.5">{needsPick && !terminal ? 'Pick order first' : pendingApproval ? 'Awaiting Finance approval' : !order.approved ? 'Approve first' : 'Trigger waybill booking'}</p>
+                            <>
+                              {/* Address verification — required for returns before Buy Label */}
+                              {order.isReturn && order.approved && !pendingApproval && !terminal && (
+                                <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                                  addrVerified
+                                    ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                                    : 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20'
+                                }`}>
+                                  <input
+                                    type="checkbox"
+                                    checked={addrVerified}
+                                    onChange={e => setAddrVerified(e.target.checked)}
+                                    className="mt-0.5 w-4 h-4 shrink-0 accent-emerald-600"
+                                  />
+                                  <div>
+                                    <p className={`text-xs font-semibold ${addrVerified ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                                      {addrVerified ? '✓ Address confirmed' : '⚠ Verify collection address before booking'}
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                                      {[order.address?.street, order.address?.suburb, order.address?.city, order.address?.postalCode].filter(Boolean).join(', ')}
+                                    </p>
+                                    {!addrVerified && (
+                                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Tick to confirm the courier will collect from the correct address.</p>
+                                    )}
+                                  </div>
+                                </label>
+                              )}
+                              <div className={`flex items-center justify-between ${(needsPick || pendingApproval) && !terminal ? 'opacity-40 pointer-events-none select-none' : ''}`}>
+                                <div>
+                                  <p className={`text-sm font-medium ${(!order.approved || needsPick || pendingApproval) ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>Buy Label</p>
+                                  <p className="text-xs text-slate-400 mt-0.5">
+                                    {needsPick && !terminal ? 'Pick order first'
+                                      : pendingApproval ? 'Awaiting Finance approval'
+                                      : !order.approved ? 'Approve first'
+                                      : order.isReturn && !addrVerified ? 'Confirm address above first'
+                                      : 'Trigger waybill booking'}
+                                  </p>
+                                </div>
+                                <Toggle
+                                  checked={order.buyLabel}
+                                  onChange={v => onUpdate({ buyLabel: v })}
+                                  disabled={terminal || !order.approved || needsPick || pendingApproval || (order.isReturn && !addrVerified)}
+                                />
                               </div>
-                              <Toggle checked={order.buyLabel} onChange={v => onUpdate({ buyLabel: v })} disabled={terminal || !order.approved || needsPick || pendingApproval} />
-                            </div>
+                            </>
                           )}
                         </>
                       )
