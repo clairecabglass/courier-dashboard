@@ -55,6 +55,8 @@ export function Dashboard() {
   const [returnOrder, setReturnOrder] = useState(null)
   const [toasts, setToasts] = useState([])
   const [whData, setWHData] = useState({ categories: [], uploads: [] })
+  const [historyPage, setHistoryPage] = useState(1)
+  const HISTORY_PAGE_SIZE = 50
 
   // Toast helper — optional action = { label, onClick }, optional duration
   const notify = (message, type = 'success', action = null, duration = 4000) => {
@@ -159,6 +161,9 @@ export function Dashboard() {
   const effectiveStagedIds  = useMemo(() => (isSandbox || isDemo) ? new Set(allOrders.filter(o => o.staged).map(o => o.id))  : stagedIds,  [isSandbox, isDemo, allOrders, stagedIds])
 
   const source = activeTab === 'history' ? allHistory : allOrders
+
+  // Reset to page 1 whenever the user switches tabs or changes any filter
+  useEffect(() => { setHistoryPage(1) }, [activeTab, activeFilter, courierFilter, search, dateFrom, dateTo])
 
   const filtered = useMemo(() => {
     const rows = source.filter(o => {
@@ -512,10 +517,18 @@ export function Dashboard() {
                   search={search} setSearch={setSearch}
                   dateFrom={dateFrom} setDateFrom={setDateFrom}
                   dateTo={dateTo} setDateTo={setDateTo} />
-                <OrdersTable orders={filtered} selectedId={selectedId}
+                <OrdersTable orders={activeTab === 'history' ? filtered.slice(0, historyPage * HISTORY_PAGE_SIZE) : filtered} selectedId={selectedId}
                   onSelect={(id) => setSelectedId(prev => prev === id ? null : id)}
                   onUpdate={updateOrder} inHistory={activeTab === 'history'}
                   onMoveToHistory={moveToHistory} onBulkDelete={bulkDelete} />
+                {activeTab === 'history' && filtered.length > historyPage * HISTORY_PAGE_SIZE && (
+                  <div className="flex justify-center py-4">
+                    <button onClick={() => setHistoryPage(p => p + 1)}
+                      className="px-6 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium">
+                      Load more ({filtered.length - historyPage * HISTORY_PAGE_SIZE} remaining)
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </>
