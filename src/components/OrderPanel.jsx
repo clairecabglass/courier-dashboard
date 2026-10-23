@@ -35,6 +35,7 @@ function Field({ label, value, editing, onChange, placeholder, type = 'text' }) 
 export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveNote, onMoveToHistory, onRestore, onToggleBackOrder, onCreateReturn, inHistory }) {
   const { user, perm } = useAuth()
   const canEdit = perm('orders', 'edit')
+  const isAdmin = user?.role === 'admin' || user?.id === 999
   const open = !!order
   const terminal = order && [STATUS.BOOKED, STATUS.BOOKING].includes(order.status)
 
@@ -671,8 +672,8 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                 </section>
               )}
 
-              {/* Delete */}
-              {canEdit && onDelete && !editing && (
+              {/* Delete — admin only to prevent accidental permanent data loss */}
+              {isAdmin && onDelete && !editing && (
                 <section>
                   <h3 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Danger Zone</h3>
                   <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10 p-4">

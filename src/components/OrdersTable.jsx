@@ -29,8 +29,9 @@ const COURIER_COLORS = {
 }
 
 export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, onMoveToHistory, onBulkDelete, inHistory = false }) {
-  const { perm } = useAuth()
+  const { perm, user } = useAuth()
   const canEdit = perm('orders', 'edit')
+  const isAdmin = user?.role === 'admin' || user?.id === 999
   // terminal = can't edit fields (booked / mid-booking / failed)
   const isTerminal = (o) => [STATUS.BOOKED, STATUS.BOOKING, STATUS.BOOKING_FAILED].includes(o.status)
   // Archivable = completed orders that can go to History (booked or Triangle)
@@ -92,11 +93,15 @@ export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, on
             <Archive size={14} /> Move {pickedCount} to History
           </button>
 
-          <div className="h-4 w-px bg-white/20" />
-          <button onClick={() => { if (confirm(`Delete ${pickedCount} order${pickedCount !== 1 ? 's' : ''}? This can't be undone.`)) deleteSelected() }}
-            className="flex items-center gap-1.5 text-sm font-semibold text-red-400 hover:text-red-300 transition-colors">
-            <Trash2 size={14} /> Delete {pickedCount}
-          </button>
+          {isAdmin && (
+            <>
+              <div className="h-4 w-px bg-white/20" />
+              <button onClick={() => { if (confirm(`Permanently delete ${pickedCount} order${pickedCount !== 1 ? 's' : ''}? This cannot be undone and removes them from the sheet.`)) deleteSelected() }}
+                className="flex items-center gap-1.5 text-sm font-semibold text-red-400 hover:text-red-300 transition-colors">
+                <Trash2 size={14} /> Delete {pickedCount}
+              </button>
+            </>
+          )}
 
           <button onClick={clearPicked} className="ml-auto text-white/60 hover:text-white"><X size={16} /></button>
         </div>
