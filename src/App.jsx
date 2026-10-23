@@ -505,26 +505,6 @@ export function Dashboard() {
                         {archiving ? 'Moving…' : 'Move booked to History'}
                       </button>
                     )}
-                    {isClaire && (() => {
-                      const invoicedInHistory = history.filter(o => o.status === STATUS.INVOICED)
-                      if (invoicedInHistory.length === 0) return null
-                      return (
-                        <button onClick={async () => {
-                          if (!confirm(`Restore ${invoicedInHistory.length} Invoiced order${invoicedInHistory.length !== 1 ? 's' : ''} back to Orders?\n\n${invoicedInHistory.map(o => o.psNo).join(', ')}`)) return
-                          try {
-                            await restoreOrders(invoicedInHistory.map(o => o.psNo))
-                            addLog(user, 'Restored Invoiced orders from History', `${invoicedInHistory.length} restored`)
-                            await loadOrders()
-                            notify(`${invoicedInHistory.length} Invoiced order${invoicedInHistory.length !== 1 ? 's' : ''} restored to Orders`)
-                          } catch (err) {
-                            notify('Restore failed — try again', 'warning')
-                          }
-                        }}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 shadow-sm hover:border-orange-400 transition-colors">
-                          ⚠ Restore {invoicedInHistory.length} Invoiced from History
-                        </button>
-                      )
-                    })()}
                   </div>
                 )}
                 <FilterBar orders={source} activeFilter={activeFilter} setActiveFilter={setActiveFilter}
