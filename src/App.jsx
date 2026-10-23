@@ -230,8 +230,8 @@ export function Dashboard() {
     const testIds = ids.filter(id => test.isTestId(id))
     if (testIds.length) { testIds.forEach(id => test.archiveTestOrder(id)); setSelectedId(null); notify('Test order moved to History'); return }
     if (!LIVE) { notify('Archiving works on the live site only.', 'warning'); return }
-    // Manual move allows any status except mid-booking
-    const targets = [...orders].filter(o => ids.includes(o.id) && o.status !== STATUS.BOOKING)
+    // Manual move: never move Invoiced or mid-booking orders
+    const targets = [...orders].filter(o => ids.includes(o.id) && o.status !== STATUS.BOOKING && o.status !== STATUS.INVOICED)
     if (targets.length === 0) { notify('No movable orders in selection.', 'warning'); return }
     // optimistic remove
     const psNos = targets.map(o => o.psNo)
@@ -364,10 +364,10 @@ export function Dashboard() {
 
   const handleArchive = async () => {
     if (!LIVE) { alert('Archiving works on the live site only.'); return }
-    const archivable = [STATUS.BOOKED, STATUS.TRIANGLE, STATUS.INVOICED]
+    const archivable = [STATUS.BOOKED, STATUS.TRIANGLE]
     const targets = orders.filter(o => archivable.includes(o.status))
     if (targets.length === 0) { alert('No completed orders to move to history.'); return }
-    if (!confirm(`Move ${targets.length} completed order${targets.length !== 1 ? 's' : ''} (booked + Triangle) to History?`)) return
+    if (!confirm(`Move ${targets.length} completed order${targets.length !== 1 ? 's' : ''} (Booked + Triangle) to History?\n\nInvoiced orders are NOT included.`)) return
     setArchiving(true)
     try {
       const psNos = targets.map(o => o.psNo)
@@ -505,6 +505,26 @@ export function Dashboard() {
                         {archiving ? 'Moving…' : 'Move booked to History'}
                       </button>
                     )}
+                    {isClaire && (() => {
+                      const invoicedInHistory = history.filter(o => o.status === STATUS.INVOICED)
+                      if (invoicedInHistory.length === 0) return null
+                      return (
+                        <button onClick={async () => {
+                          if (!confirm(`Restore ${invoicedInHistory.length} Invoiced order${invoicedInHistory.length !== 1 ? 's' : ''} back to Orders?\n\n${invoicedInHistory.map(o => o.psNo).join(', ')}`)) return
+                          try {
+                            await restoreOrders(invoicedInHistory.map(o => o.psNo))
+                            addLog(user, 'Restored Invoiced orders from History', `${invoicedInHistory.length} restored`)
+                            await loadOrders()
+                            notify(`${invoicedInHistory.length} Invoiced order${invoicedInHistory.length !== 1 ? 's' : ''} restored to Orders`)
+                          } catch (err) {
+                            notify('Restore failed — try again', 'warning')
+                          }
+                        }}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 shadow-sm hover:border-orange-400 transition-colors">
+                          ⚠ Restore {invoicedInHistory.length} Invoiced from History
+                        </button>
+                      )
+                    })()}
                   </div>
                 )}
                 <FilterBar orders={source} activeFilter={activeFilter} setActiveFilter={setActiveFilter}
