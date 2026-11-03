@@ -1,6 +1,21 @@
-import { useState, useCallback, useRef } from 'react'
-import { Upload, Download, AlertTriangle, CheckCircle2, XCircle, Info } from 'lucide-react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { Upload, Download, AlertTriangle, CheckCircle2, XCircle, Info, Printer } from 'lucide-react'
 import * as XLSX from 'xlsx'
+
+const PRINT_STYLES = `
+@media print {
+  body > * { display: none !important; }
+  #epx-print-root { display: block !important; }
+  #epx-print-root .no-print { display: none !important; }
+  #epx-print-root { font-family: system-ui, sans-serif; font-size: 11px; color: #000; }
+  #epx-print-root table { width: 100%; border-collapse: collapse; }
+  #epx-print-root th, #epx-print-root td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; white-space: nowrap; }
+  #epx-print-root th { background: #f0f0f0; font-weight: 600; }
+  #epx-print-root tfoot td { background: #f0f0f0; font-weight: 700; }
+  #epx-print-root .print-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  #epx-print-root .print-meta { font-size: 10px; color: #555; margin-bottom: 12px; }
+  @page { margin: 1.5cm; size: landscape; }
+}`
 
 // Column indices in the EPX Excel file (0-based)
 const COL_WAYBILL     = 0
@@ -82,7 +97,22 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
   const [incVat,   setIncVat]   = useState(true)
   const [dragging, setDragging] = useState(false)
   const [error,    setError]    = useState('')
-  const fileRef = useRef()
+  const fileRef   = useRef()
+  const printRoot = useRef()
+
+  useEffect(() => {
+    const el = document.createElement('style')
+    el.id = 'epx-print-styles'
+    el.textContent = PRINT_STYLES
+    document.head.appendChild(el)
+    return () => el.remove()
+  }, [])
+
+  const handlePrint = () => {
+    if (!printRoot.current) return
+    printRoot.current.id = 'epx-print-root'
+    window.print()
+  }
 
   // Build lookup: psNo → { epxQuote, itemSummary } from orders + history
   const appLookup = useCallback(() => {
@@ -196,9 +226,15 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
       )}
 
       {rows && (
-        <>
+        <div ref={printRoot}>
+          {/* Print header — only visible when printing */}
+          <div className="hidden print:block print-title">EPX Reconciliation — {filename}</div>
+          <div className="hidden print:block print-meta">
+            {rows.length} waybills · {incVat ? 'Inc VAT' : 'Excl VAT'} · Generated {new Date().toLocaleDateString('en-ZA')}
+          </div>
+
           {/* Toolbar */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap no-print">
             <div>
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{filename}</p>
               <p className="text-xs text-slate-400">{rows.length} waybills · {issues} pricing issue{issues !== 1 ? 's' : ''}{weightIssues > 0 ? ` · ${weightIssues} weight discrepanc${weightIssues !== 1 ? 'ies' : 'y'}` : ''}</p>
@@ -222,11 +258,15 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
                 className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg bg-[#FECD28] text-slate-900 hover:brightness-95">
                 <Download size={13} /> Download CSV
               </button>
+              <button onClick={handlePrint}
+                className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+                <Printer size={13} /> Print / PDF
+              </button>
             </div>
           </div>
 
           {/* Summary tiles */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 no-print">
             {[
               { label: 'EPX Invoice Total',  value: fmt(epxTotal),    sub: incVat ? 'inc VAT' : 'excl VAT' },
               { label: 'App Quotes Total',   value: fmt(appTotal),    sub: 'EPX quotes from app' },
@@ -243,7 +283,7 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
           </div>
 
           {/* Legend */}
-          <div className="flex flex-wrap gap-2 text-xs">
+          <div className="flex flex-wrap gap-2 text-xs no-print">
             {Object.entries(STATUS_META).map(([k, m]) => (
               <span key={k} className={`px-2 py-0.5 rounded-full border ${m.badge}`}>{m.label}</span>
             ))}
@@ -312,7 +352,7 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
               </tfoot>
             </table>
           </div>
-        </>
+        </div>
       )}
     </div>
   )
