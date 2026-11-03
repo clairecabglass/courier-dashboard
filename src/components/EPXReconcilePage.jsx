@@ -122,6 +122,7 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
         map[String(o.psNo).trim().toLowerCase()] = {
           epxQuote:    o.epxQuote    ?? null,
           itemSummary: o.itemSummary ?? null,
+          psUrl:       o.psUrl       ?? null,
         }
       }
     })
@@ -150,7 +151,7 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
           const appData    = psNo ? (lookup[psNo.toLowerCase()] ?? null) : null
           const found      = psNo ? (psNo.toLowerCase() in lookup) : false
           const appWeight  = appData ? parseAppWeight(appData.itemSummary) : null
-          return { waybill, psNo, consignee, subtotal, totalInc, actualMass, volMass, chrgMass, appQuote: appData?.epxQuote ?? null, appWeight, found }
+          return { waybill, psNo, consignee, subtotal, totalInc, actualMass, volMass, chrgMass, appQuote: appData?.epxQuote ?? null, appWeight, psUrl: appData?.psUrl ?? null, found }
         })
         setRows(parsed)
         setFilename(file.name)
@@ -310,7 +311,14 @@ export default function EPXReconcilePage({ orders = [], history = [] }) {
                   return (
                     <tr key={i} className={`${meta.bg} transition-colors`}>
                       <td className="px-3 py-3 font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">{r.waybill}</td>
-                      <td className="px-3 py-3 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">{r.psNo || '—'}</td>
+                      <td className="px-3 py-3 font-medium whitespace-nowrap">
+                        {r.psUrl
+                          ? <a href={r.psUrl} target="_blank" rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                              {r.psNo} <span className="text-[10px]">↗</span>
+                            </a>
+                          : <span className="text-slate-700 dark:text-slate-300">{r.psNo || '—'}</span>}
+                      </td>
                       <td className="px-3 py-3 text-slate-600 dark:text-slate-400 max-w-[160px] truncate" title={r.consignee}>{r.consignee}</td>
                       <td className="px-3 py-3 tabular-nums font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">{fmt(epxAmt)}</td>
                       <td className="px-3 py-3 tabular-nums text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.appQuote != null ? fmt(r.appQuote) : <span className="text-slate-400 italic text-xs">no quote</span>}</td>
