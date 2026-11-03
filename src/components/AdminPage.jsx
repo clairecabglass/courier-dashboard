@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, Check, Eye, EyeOff, Pencil as PencilIcon, Shield, ShieldCheck, User, Clock, BarChart2, Users, Truck } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, Eye, EyeOff, Pencil as PencilIcon, Shield, ShieldCheck, User, Clock, BarChart2, Users, Truck, FileSpreadsheet } from 'lucide-react'
 import { useAuth, ROLES, PAGES, defaultPermsForRole } from '../context/AuthContext'
 import { useActivity } from '../context/ActivityContext'
 import AnalyticsTab from './AnalyticsTab'
+import EPXReconcilePage from './EPXReconcilePage'
 
 const ROLE_COLORS = { admin: 'text-red-600', general: 'text-blue-600', sales: 'text-green-600', dispatch: 'text-purple-600' }
 
@@ -334,9 +335,10 @@ function ActivityLog() {
 }
 
 const SUB_TABS = [
-  { key: 'users',     label: 'Users',     icon: Users },
-  { key: 'analytics', label: 'Analytics', icon: BarChart2 },
-  { key: 'activity',  label: 'Activity',  icon: Clock },
+  { key: 'users',        label: 'Users',         icon: Users },
+  { key: 'analytics',   label: 'Analytics',     icon: BarChart2 },
+  { key: 'activity',    label: 'Activity',       icon: Clock },
+  { key: 'epx-reconcile', label: 'EPX Reconcile', icon: FileSpreadsheet },
 ]
 
 export default function AdminPage({ orders, history }) {
@@ -364,9 +366,10 @@ export default function AdminPage({ orders, history }) {
         })}
       </div>
 
-      {sub === 'users'     && <UsersTab />}
-      {sub === 'analytics' && <AnalyticsTab orders={orders} history={history} />}
-      {sub === 'activity'  && <ActivityLog />}
+      {sub === 'users'          && <UsersTab />}
+      {sub === 'analytics'      && <AnalyticsTab orders={orders} history={history} />}
+      {sub === 'activity'       && <ActivityLog />}
+      {sub === 'epx-reconcile'  && <EPXReconcilePage orders={orders} history={history} />}
     </div>
   )
 }
