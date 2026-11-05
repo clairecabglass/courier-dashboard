@@ -662,6 +662,21 @@ export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveN
                 </section>
               )}
 
+              {/* Mark as Booked — for Other courier orders that were booked manually */}
+              {canEdit && !inHistory && !editing && order.selectedCourier === 'Other'
+                && ![STATUS.BOOKED, STATUS.BOOKING, STATUS.BOOKING_FAILED].includes(order.status) && (
+                <section>
+                  <button
+                    onClick={() => {
+                      const waybill = prompt('Enter waybill / tracking number (optional):') ?? ''
+                      onUpdate({ status: STATUS.BOOKED, ...(waybill.trim() ? { waybillNo: waybill.trim() } : {}) })
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                    <Check size={15} /> Mark as Booked
+                  </button>
+                </section>
+              )}
+
               {/* Move to History — any order in Orders except mid-booking */}
               {canEdit && onMoveToHistory && !editing && !inHistory && order.status !== STATUS.BOOKING && (
                 <section>

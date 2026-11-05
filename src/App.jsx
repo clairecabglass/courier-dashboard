@@ -235,8 +235,8 @@ export function Dashboard() {
     const testIds = ids.filter(id => test.isTestId(id))
     if (testIds.length) { testIds.forEach(id => test.archiveTestOrder(id)); setSelectedId(null); notify('Test order moved to History'); return }
     if (!LIVE) { notify('Archiving works on the live site only.', 'warning'); return }
-    // Manual move: never move Invoiced or mid-booking orders
-    const targets = [...orders].filter(o => ids.includes(o.id) && o.status !== STATUS.BOOKING && o.status !== STATUS.INVOICED)
+    // Manual move: never move mid-booking orders (race condition risk)
+    const targets = [...orders].filter(o => ids.includes(o.id) && o.status !== STATUS.BOOKING)
     if (targets.length === 0) { notify('No movable orders in selection.', 'warning'); return }
     // optimistic remove
     const psNos = targets.map(o => o.psNo)
