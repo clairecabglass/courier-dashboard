@@ -31,7 +31,7 @@ const COURIER_COLORS = {
 export default function OrdersTable({ orders, selectedId, onSelect, onUpdate, onMoveToHistory, onBulkDelete, inHistory = false }) {
   const { perm, user } = useAuth()
   const canEdit = perm('orders', 'edit')
-  const isAdmin = user?.role === 'admin' || user?.id === 999
+  const isAdmin = user?.role === 'admin' || user?.id === 999 || user?.id === 2
   // terminal = can't edit fields (booked / mid-booking / failed)
   const isTerminal = (o) => [STATUS.BOOKED, STATUS.BOOKING, STATUS.BOOKING_FAILED].includes(o.status)
   // Archivable = completed orders that can go to History (booked or Triangle)

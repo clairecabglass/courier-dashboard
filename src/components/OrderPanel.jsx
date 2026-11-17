@@ -35,7 +35,7 @@ function Field({ label, value, editing, onChange, placeholder, type = 'text' }) 
 export default function OrderPanel({ order, onClose, onUpdate, onDelete, onSaveNote, onMoveToHistory, onRestore, onToggleBackOrder, onCreateReturn, inHistory }) {
   const { user, perm } = useAuth()
   const canEdit = perm('orders', 'edit')
-  const isAdmin = user?.role === 'admin' || user?.id === 999
+  const isAdmin = user?.role === 'admin' || user?.id === 999 || user?.id === 2
   const open = !!order
   const terminal = order && [STATUS.BOOKED, STATUS.BOOKING].includes(order.status)
 
